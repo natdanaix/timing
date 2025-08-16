@@ -1,952 +1,123 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+  
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
 <title>Football Time Tuner – Auto Play</title>
-  <link rel="icon" type="image/png" href="https://thaileague.co.th/assets/img/thaileague_meta_logo.jpeg">
+<link rel="icon" type="image/png" href="https://thaileague.co.th/assets/img/thaileague_meta_logo.jpeg">
+<link rel="stylesheet" href="style.css">
 <style>
-:root {
-  /* Football field colors */
-  --field-green: #2d7d32;
-  --field-light: #4caf50;
-  --field-dark: #1b5e20;
-  --grass-light: #66bb6a;
-  --grass-dark: #388e3c;
-  
-  /* UI colors */
-  --bg: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
-  --panel: rgba(255, 255, 255, 0.1);
-  --panel-border: rgba(255, 255, 255, 0.2);
-  --line: #ffffff;
-  --tick: rgba(255, 255, 255, 0.6);
-  
-  /* Card theme colors */
-  --card-halftime-bg: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(244, 67, 54, 0.15));
-  --card-halftime-border: rgba(33, 150, 243, 0.4);
-  
-  --card-tuner-bg: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 193, 7, 0.1));
-  --card-tuner-border: rgba(255, 152, 0, 0.3);
-  
-  /* Half colors */
-  --half1: #4caf50;
-  --half2: #8bc34a;
-  --bound: #ffeb3b;
-  --fg: #ffffff;
-  
-  /* Shadows */
-  --shadow-primary: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --shadow-secondary: 0 4px 16px rgba(0, 0, 0, 0.2);
+/* Team inputs styles */
+.card-teams {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(56, 142, 60, 0.1));
+  border-color: rgba(76, 175, 80, 0.3);
+  box-shadow: 0 8px 32px rgba(76, 175, 80, 0.2);
 }
 
-* {
-  box-sizing: border-box;
+.card-teams:hover {
+  box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3), 0 12px 40px rgba(76, 175, 80, 0.2);
 }
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  min-height: 100vh;
-  position: relative;
-  overflow-x: hidden;
-}
-
-/* Football field background */
-.field-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--bg);
-  z-index: -1;
-}
-
-@keyframes grassSway {
-  0%, 100% { opacity: 0.8; }
-  50% { opacity: 1; }
-}
-
-h1 {
-  margin: 18px 16px 6px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  font-size: clamp(24px, 5vw, 36px);
-  text-align: center;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
-  animation: titleGlow 3s ease-in-out infinite;
-}
-
-@keyframes titleGlow {
-  0%, 100% { text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5); }
-  50% { text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.3); }
-}
-
-.card {
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 20px;
-  padding: 16px;
-  margin: 12px 16px;
-  box-shadow: var(--shadow-primary);
-  backdrop-filter: blur(10px);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-primary), 0 12px 40px rgba(0, 0, 0, 0.4);
-}
-
-/* Card variants with different colors */
-.card-halftime {
-  background: var(--card-halftime-bg);
-  border-color: var(--card-halftime-border);
-  box-shadow: 0 8px 32px rgba(33, 150, 243, 0.2);
-}
-
-.card-halftime:hover {
-  box-shadow: 0 8px 32px rgba(33, 150, 243, 0.3), 0 12px 40px rgba(33, 150, 243, 0.2);
-}
-
-.card-tuner {
-  background: var(--card-tuner-bg);
-  border-color: var(--card-tuner-border);
-  box-shadow: 0 8px 32px rgba(255, 152, 0, 0.2);
-}
-
-.card-tuner:hover {
-  box-shadow: 0 8px 32px rgba(255, 152, 0, 0.3), 0 12px 40px rgba(255, 152, 0, 0.2);
-}
-
-.row {
+.team-inputs {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 20px;
   flex-wrap: wrap;
-  align-items: center;
-}
-
-.group {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  flex: 1 1 320px;
-  transition: all 0.3s ease;
-}
-
-.group:hover {
-  background: rgba(0, 0, 0, 0.3);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: scale(1.02);
-}
-
-.g1 {
-  border-color: rgba(33, 150, 243, 0.6);
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.4), rgba(25, 118, 210, 0.3));
-}
-
-.g1:hover {
-  border-color: rgba(33, 150, 243, 0.8);
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.5), rgba(25, 118, 210, 0.4));
-}
-
-.g2 {
-  border-color: rgba(244, 67, 54, 0.6);
-  background: linear-gradient(135deg, rgba(244, 67, 54, 0.4), rgba(211, 47, 47, 0.3));
-}
-
-.g2:hover {
-  border-color: rgba(244, 67, 54, 0.8);
-  background: linear-gradient(135deg, rgba(244, 67, 54, 0.5), rgba(211, 47, 47, 0.4));
-}
-
-/* Auto-play controls */
-.auto-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.play-controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.play-btn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid rgba(76, 175, 80, 0.4);
-  background: rgba(76, 175, 80, 0.2);
-  color: #4caf50;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.play-btn:hover {
-  background: rgba(76, 175, 80, 0.3);
-  border-color: rgba(76, 175, 80, 0.6);
-}
-
-.play-btn.playing {
-  background: rgba(244, 67, 54, 0.2);
-  border-color: rgba(244, 67, 54, 0.4);
-  color: #f44336;
-}
-
-.play-btn.playing:hover {
-  background: rgba(244, 67, 54, 0.3);
-  border-color: rgba(244, 67, 54, 0.6);
-}
-
-.live-btn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid rgba(33, 150, 243, 0.4);
-  background: rgba(33, 150, 243, 0.2);
-  color: #2196f3;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  animation: livePulse 2s ease-in-out infinite;
-}
-
-.live-btn:hover {
-  background: rgba(33, 150, 243, 0.3);
-  border-color: rgba(33, 150, 243, 0.6);
-}
-
-@keyframes livePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.4); }
-  50% { box-shadow: 0 0 0 4px rgba(33, 150, 243, 0); }
-}
-
-.auto-status {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* Tuner header */
-.tuner-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.tuner-header h3 {
-  margin: 0;
-  font-size: clamp(18px, 4.5vw, 24px);
-  font-weight: 900;
-  color: var(--fg);
-}
-
-.bookmark-add-btn {
-  font-size: clamp(12px, 3.5vw, 14px);
-  padding: 8px 12px;
-  background: linear-gradient(135deg, #ff9800, #ffc107);
-  border-color: #ff9800;
-  color: #fff;
-}
-
-.bookmark-add-btn:hover {
-  background: linear-gradient(135deg, #ffc107, #ff9800);
-  box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
-}
-
-/* Bookmark controls */
-.bookmark-controls {
-  margin-top: 12px;
-  text-align: center;
-}
-
-.bookmark-list-btn {
-  font-size: clamp(12px, 3.5vw, 14px);
-  padding: 10px 16px;
-  background: rgba(33, 150, 243, 0.2);
-  border-color: rgba(33, 150, 243, 0.4);
-  color: #fff;
-  width: 100%;
-}
-
-.bookmark-list-btn:hover {
-  background: rgba(33, 150, 243, 0.3);
-  border-color: rgba(33, 150, 243, 0.6);
-}
-
-/* Bookmarks on dial */
-.bookmarks {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  pointer-events: none;
-}
-
-.bookmark-marker {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  font-size: 16px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid #fff;
-  cursor: pointer;
-  pointer-events: auto;
-  z-index: 5;
-  animation: bookmarkPulse 2s ease-in-out infinite;
-  transition: all 0.3s ease;
 }
 
-.bookmark-marker:hover {
-  transform: translateY(-50%) scale(1.2);
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-}
-
-@keyframes bookmarkPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
-}
-
-.bookmark-marker.yellow { 
-  background: #ffeb3b; 
-  color: #000; 
-  border-color: #fbc02d; 
-  border-radius: 4px;
-}
-.bookmark-marker.red { 
-  background: #f44336; 
-  color: #fff; 
-  border-color: #c62828; 
-  border-radius: 4px;
-}
-.bookmark-marker.penalty { background: #4caf50; color: #fff; border-color: #2e7d32; }
-.bookmark-marker.goal { background: #2196f3; color: #fff; border-color: #1565c0; }
-.bookmark-marker.substitution { background: #9c27b0; color: #fff; border-color: #6a1b9a; }
-.bookmark-marker.important { background: #ff9800; color: #fff; border-color: #e65100; }
-.bookmark-marker.custom { background: #9c27b0; color: #fff; border-color: #6a1b9a; }
-
-/* Bookmark form */
-.bookmark-form {
-  margin-top: 16px;
-}
-
-.event-types {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.event-type {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.event-type:hover {
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.event-type input[type="radio"] {
-  display: none;
-}
-
-.event-type input[type="radio"]:checked + .event-icon {
-  transform: scale(1.2);
-}
-
-.event-type input[type="radio"]:checked ~ span {
-  color: #fff;
-  font-weight: 700;
-}
-
-.event-type:has(input[type="radio"]:checked) {
-  border-color: #4caf50;
-  background: rgba(76, 175, 80, 0.2);
-}
-
-.event-icon {
-  font-size: 18px;
-  transition: transform 0.3s ease;
-}
-
-.event-type span:last-child {
-  font-size: clamp(11px, 3vw, 13px);
-  font-weight: 600;
-}
-
-#bookmarkNote {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.3);
-  color: #fff;
-  font-size: 14px;
-}
-
-#bookmarkNote:focus {
-  outline: none;
-  border-color: #4caf50;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
-}
-
-#bookmarkNote::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-/* Bookmark list */
-.bookmark-list {
-  max-height: 70vh;
-  overflow-y: auto;
-  margin-top: 12px;
-}
-
-.bookmark-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px;
-  margin-bottom: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
-
-.bookmark-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.bookmark-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.team-input-group {
   flex: 1;
-}
-
-.bookmark-info .event-icon {
-  font-size: 20px;
-}
-
-.bookmark-details {
-  flex: 1;
-}
-
-.bookmark-time {
-  font-weight: 900;
-  font-size: 16px;
-  color: #4caf50;
-}
-
-.bookmark-note {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 2px;
-}
-
-.bookmark-actions {
+  min-width: 200px;
   display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.bookmark-goto, .bookmark-delete {
-  padding: 6px 10px;
-  font-size: 12px;
-  border-radius: 6px;
-}
-
-.bookmark-goto {
-  background: rgba(76, 175, 80, 0.2);
-  border-color: rgba(76, 175, 80, 0.4);
-  color: #4caf50;
-}
-
-.bookmark-goto:hover {
-  background: rgba(76, 175, 80, 0.3);
-}
-
-.bookmark-delete {
-  background: rgba(244, 67, 54, 0.2);
-  border-color: rgba(244, 67, 54, 0.4);
-  color: #f44336;
-}
-
-.bookmark-delete:hover {
-  background: rgba(244, 67, 54, 0.3);
-}
-
-.clear-all-btn {
-  font-size: clamp(11px, 3vw, 12px);
-  padding: 8px 12px;
-  background: rgba(244, 67, 54, 0.2);
-  border-color: rgba(244, 67, 54, 0.4);
-  color: #f44336;
-}
-
-.clear-all-btn:hover {
-  background: rgba(244, 67, 54, 0.3);
-  border-color: rgba(244, 67, 54, 0.6);
-}
-
-.bookmark-empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 14px;
-}
-
-.card-tuner .bar-pill {
-  border-color: rgba(255, 152, 0, 0.3);
-  background: rgba(255, 152, 0, 0.1);
-}
-
-.card-tuner .bar-pill:hover {
-  border-color: rgba(255, 152, 0, 0.4);
-  background: rgba(255, 152, 0, 0.15);
-}
-
-.card-tuner .bar-real {
-  border-color: rgba(255, 193, 7, 0.4);
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1));
-}
-
-.card-tuner .bar-real .bar-value {
-  color: #fff3c4;
-  text-shadow: 0 2px 12px rgba(255, 152, 0, 0.3);
-}
-
-.card-tuner .bar-field.h1 {
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.25), rgba(56, 142, 60, 0.2));
-  border-color: rgba(76, 175, 80, 0.5);
-}
-
-.card-tuner .bar-field.h1 .bar-value {
-  color: #ffffff;
-  text-shadow: 
-    0 2px 12px rgba(0, 0, 0, 0.8),
-    0 0 20px rgba(76, 175, 80, 0.6),
-    1px 1px 2px rgba(0, 0, 0, 1);
+.team-input-group label {
   font-weight: 900;
-}
-
-.card-tuner .bar-field.h2 {
-  background: linear-gradient(135deg, rgba(139, 195, 74, 0.25), rgba(104, 159, 56, 0.2));
-  border-color: rgba(139, 195, 74, 0.5);
-}
-
-.card-tuner .bar-field.h2 .bar-value {
-  color: #ffffff;
-  text-shadow: 
-    0 2px 12px rgba(0, 0, 0, 0.8),
-    0 0 20px rgba(139, 195, 74, 0.6),
-    1px 1px 2px rgba(0, 0, 0, 1);
-  font-weight: 900;
-}
-
-.label {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 900;
+  color: #2e7d32;
+  font-size: clamp(14px, 4vw, 16px);
   letter-spacing: 0.3px;
-  font-size: clamp(16px, 4vw, 20px);
 }
 
-.dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3) inset, 0 0 16px currentColor;
-  animation: dotPulse 2s ease-in-out infinite;
-}
-
-@keyframes dotPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3) inset, 0 0 20px currentColor; }
-}
-
-.dot.g {
-  color: var(--half1);
-  background: var(--half1);
-}
-
-.dot.p {
-  color: var(--half2);
-  background: var(--half2);
-}
-
-/* Buttons and inputs */
-select, button {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.3);
-  color: var(--fg);
-  border-radius: 12px;
+.team-input-group input {
   padding: 12px 16px;
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #2e7d32;
+  font-size: clamp(14px, 4vw, 16px);
   font-weight: 700;
-  cursor: pointer;
-  font-size: clamp(14px, 4vw, 18px);
+  text-align: center;
   transition: all 0.3s ease;
   backdrop-filter: blur(5px);
 }
 
-select {
-  min-width: 80px;
-}
-
-button:hover, select:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.4);
+.team-input-group input:focus {
+  outline: none;
+  border-color: #4caf50;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
   transform: translateY(-1px);
 }
 
-/* Button animations */
-.btn-animate {
-  position: relative;
-  overflow: hidden;
+.team-input-group input::placeholder {
+  color: rgba(46, 125, 50, 0.6);
+  font-weight: 500;
 }
 
-.btn-animate::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.6s ease, height 0.6s ease;
-}
-
-.btn-animate:active::before {
-  width: 300px;
-  height: 300px;
-}
-
-.btn-animate:active {
-  transform: scale(0.95);
-}
-
-.btn-main {
-  background: linear-gradient(135deg, var(--half1), var(--half2));
-  border-color: var(--half1);
-  font-weight: 900;
-}
-
-.btn-main:hover {
-  background: linear-gradient(135deg, var(--half2), var(--half1));
-  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.4);
-}
-
-/* Tuner - made shorter */
-.tuner-wrap {
-  position: relative;
-  height: 180px;
-  border-radius: 20px;
-  overflow: hidden;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  margin-top: 8px;
-  touch-action: none;
-}
-
-/* Football field lines overlay */
-.field-lines {
-  position: absolute;
-  inset: 0;
-  background: 
-    /* Center line */
-    linear-gradient(90deg, transparent 49%, rgba(255, 255, 255, 0.2) 49.5%, rgba(255, 255, 255, 0.2) 50.5%, transparent 51%);
-  pointer-events: none;
-}
-
-.scale {
-  position: absolute;
-  inset: 0;
-  will-change: transform;
-  cursor: grab;
-  transition: transform 0.1s ease-out;
-}
-
-.scale.dragging {
-  cursor: grabbing;
-  transition: none;
-}
-
-.baseline {
-  position: absolute;
-  left: 0;
-  width: calc(90 * 60 * 3px);
-  top: 50%;
-  height: 2px;
-  background: var(--line);
-}
-
-.ticks {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-}
-
-.tick {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 80px;
-  width: 2px;
-  background: var(--tick);
-  transition: all 0.3s ease;
-}
-
-.tick.major {
-  height: 120px;
-  background: rgba(255, 255, 255, 0.8);
-}
-
-.tick .label {
-  position: absolute;
-  top: -20px;
-  left: 8px;
-  font-size: 14px;
-  color: var(--fg);
-  font-weight: 900;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
-}
-
-.tick .label.gr {
-  color: var(--half1);
-}
-
-.tick .label.pu {
-  color: var(--half2);
-}
-
-.tick .label.bd {
-  color: var(--bound);
-}
-
-.needle {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 0;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.needle::before {
-  content: "";
-  position: absolute;
-  left: -2px;
-  top: 15px;
-  bottom: 15px;
-  width: 4px;
-  background: linear-gradient(180deg, #fff, #ffeb3b);
-  border-radius: 2px;
-}
-
-@keyframes needleGlow {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 235, 59, 0.8); }
-  50% { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 235, 59, 1); }
-}
-
-.needle::after {
-  content: "⚽";
-  position: absolute;
-  left: -10px;
-  top: 4px;
-  font-size: 16px;
-  animation: ballSpin 4s linear infinite;
-}
-
-@keyframes ballSpin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Readout bar */
-.readout-bar {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-top: 16px;
-}
-
-.bar-pill {
+.vs-divider {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 16px 18px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(8px);
-  transition: all 0.3s ease;
-}
-
-.bar-pill:hover {
-  background: rgba(0, 0, 0, 0.4);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-}
-
-.bar-label {
-  font-weight: 800;
-  letter-spacing: 0.4px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: clamp(12px, 3.5vw, 14px);
-}
-
-.bar-hint {
-  font-size: clamp(10px, 2.5vw, 11px);
-  color: rgba(255, 255, 255, 0.5);
-  margin-top: 2px;
-}
-
-.bar-value {
-  font-variant-numeric: tabular-nums;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #ff9800, #ffc107);
+  border-radius: 50%;
   font-weight: 900;
-  letter-spacing: 0.8px;
-  font-size: clamp(24px, 8vw, 42px);
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  font-size: 18px;
+  color: white;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
+  animation: vsGlow 3s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
-.bar-real {
-  border-color: rgba(255, 255, 255, 0.2);
+@keyframes vsGlow {
+  0%, 100% { 
+    box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 4px 20px rgba(255, 152, 0, 0.6), 0 0 30px rgba(255, 152, 0, 0.3);
+    transform: scale(1.05);
+  }
 }
 
-.bar-real .bar-value {
-  color: #ffffff;
-}
-
-.bar-field {
+/* Export button styles */
+.export-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 152, 0, 0.4);
+  background: rgba(255, 152, 0, 0.2);
+  color: #ff9800;
+  font-weight: 700;
   cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 12px;
 }
 
-.bar-field.h1 {
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(56, 142, 60, 0.2));
-  border-color: rgba(76, 175, 80, 0.4);
+.export-btn:hover {
+  background: rgba(255, 152, 0, 0.3);
+  border-color: rgba(255, 152, 0, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
 }
 
-.bar-field.h1 .bar-value {
-  color: var(--half1);
-}
-
-.bar-field.h2 {
-  background: linear-gradient(135deg, rgba(139, 195, 74, 0.2), rgba(104, 159, 56, 0.2));
-  border-color: rgba(139, 195, 74, 0.4);
-}
-
-.bar-field.h2 .bar-value {
-  color: var(--half2);
-}
-
-/* Bottom sheet */
-.sheet-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  backdrop-filter: blur(4px);
-}
-
-.sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  transform: translateY(100%);
-  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  z-index: 30;
-}
-
-.sheet .panel {
-  margin: 0 12px 12px;
-  background: rgba(46, 125, 50, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(15px);
-}
-
-.sheet .row {
-  justify-content: space-between;
-}
-
-.sheet.open {
-  transform: translateY(0);
-}
-
-.sheet-backdrop.open {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.chips button {
-  padding: 10px 16px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(0, 0, 0, 0.3);
-  font-size: 14px;
-}
-
-.chips button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
-}
-
-/* Responsive */
+/* Responsive adjustments for auto-controls */
 @media (max-width: 640px) {
-  .group {
-    flex: 1 1 100%;
-  }
-  
-  .tuner-wrap {
-    height: 200px;
-  }
-  
-  .readout-bar {
-    grid-template-columns: 1fr;
-  }
-  
-  h1 {
-    font-size: clamp(20px, 6vw, 28px);
-  }
-  
   .auto-controls {
     flex-direction: column;
     gap: 8px;
@@ -955,49 +126,72 @@ button:hover, select:hover {
   .play-controls {
     justify-content: center;
     width: 100%;
+    flex-wrap: wrap;
   }
   
   .play-controls button {
-    flex: 1;
-    max-width: 120px;
+    flex: 1 1 auto;
+    min-width: 100px;
+    max-width: 140px;
+  }
+  
+  .export-btn {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+  
+  .team-inputs {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .vs-divider {
+    width: 50px;
+    height: 50px;
+    font-size: 16px;
+  }
+  
+  .team-input-group {
+    min-width: 100%;
   }
 }
 
-/* Loading animation */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
+@media (max-width: 480px) {
+  .play-controls {
+    flex-direction: column;
+    width: 100%;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .play-controls button {
+    width: 100%;
+    max-width: none;
+    margin-bottom: 4px;
   }
-}
-
-@keyframes fadeInOut {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-  20%, 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-}
-
-.card {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.card:nth-child(2) {
-  animation-delay: 0.1s;
-}
-
-.card:nth-child(3) {
-  animation-delay: 0.2s;
 }
 </style>
+
 </head>
 <body>
   <div class="field-background"></div>
   
   <h1>⚽ Football Time Tuner</h1>
+
+  <!-- ชื่อทีม -->
+  <div class="card card-teams">
+    <div class="team-inputs">
+      <div class="team-input-group">
+        <label for="teamA">🏠 ทีมเจ้าบ้าน:</label>
+        <input type="text" id="teamA" placeholder="ชื่อทีม A" maxlength="30">
+      </div>
+      <div class="vs-divider">
+        <span>VS</span>
+      </div>
+      <div class="team-input-group">
+        <label for="teamB">🚌 ทีมเยือน:</label>
+        <input type="text" id="teamB" placeholder="ชื่อทีม B" maxlength="30">
+      </div>
+    </div>
+  </div>
 
   <!-- เริ่มครึ่งแรก / ครึ่งหลัง -->
   <div class="card card-halftime">
@@ -1026,6 +220,7 @@ button:hover, select:hover {
       <div class="play-controls">
         <button id="playBtn" class="play-btn btn-animate">▶️ Play</button>
         <button id="liveBtn" class="live-btn btn-animate">🔴 LIVE</button>
+        <button id="exportBtn" class="export-btn btn-animate">📄 Export PDF</button>
       </div>
       <div class="auto-status" id="autoStatus">Paused</div>
     </div>
@@ -1175,1000 +370,8 @@ button:hover, select:hover {
     </div>
   </div>
 
-<script>
-/* === Football Time Tuner JavaScript with Auto-Play === */
+<!-- โหลดไฟล์ JavaScript -->
+<script src="app.js"></script>
 
-// Configuration constants
-const tz = 'Asia/Bangkok';
-const MAX_SEC = 90 * 60; // 90 minutes
-const PX_PER_SEC = 3;
-
-// Utility functions
-const pad2 = n => String(n).padStart(2, '0');
-const fmtMMSS = s => `${pad2(Math.floor(s / 60))}:${pad2(Math.floor(s % 60))}`;
-const fmtClockHM = d => d.toLocaleTimeString('th-TH', {
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-  timeZone: tz
-});
-const $ = q => document.querySelector(q);
-
-// Local storage keys for persistence
-const LS_KEYS = {
-  t1h: 'ftt_t1h',
-  t1m: 'ftt_t1m',
-  t2h: 'ftt_t2h',
-  t2m: 'ftt_t2m',
-  seekPos: 'ftt_seek_position'
-};
-
-// DOM Elements
-const elements = {
-  // Time inputs
-  t1h: $('#t1h'),
-  t1m: $('#t1m'),
-  t2h: $('#t2h'),
-  t2m: $('#t2m'),
-  
-  // Buttons
-  t1now: $('#t1now'),
-  t2now: $('#t2now'),
-  
-  // Auto-play controls
-  playBtn: $('#playBtn'),
-  liveBtn: $('#liveBtn'),
-  autoStatus: $('#autoStatus'),
-  
-  // Tuner components
-  wrap: $('#wrap'),
-  scale: $('#scale'),
-  ticks: $('#ticks'),
-  bookmarks: $('#bookmarks'),
-  
-  // Display bars
-  barReal: $('#barReal'),
-  barField: $('#barField'),
-  barFieldPill: $('#barFieldPill'),
-  
-  // Bottom sheet
-  sheet: $('#seekSheet'),
-  backdrop: $('#sheetBackdrop'),
-  sheetMin: $('#sheetMin'),
-  sheetSec: $('#sheetSec'),
-  sheetGo: $('#sheetGo'),
-  sheetCancel: $('#sheetCancel'),
-  
-  // Quick buttons
-  quick0: $('#quick0'),
-  quick45: $('#quick45'),
-  quick90: $('#quick90'),
-  
-  // Bookmark elements
-  addBookmarkBtn: $('#addBookmarkBtn'),
-  viewBookmarksBtn: $('#viewBookmarksBtn'),
-  bookmarkCount: $('#bookmarkCount'),
-  
-  // Bookmark sheet
-  bookmarkSheet: $('#bookmarkSheet'),
-  bookmarkBackdrop: $('#bookmarkBackdrop'),
-  bookmarkTime: $('#bookmarkTime'),
-  bookmarkNote: $('#bookmarkNote'),
-  bookmarkSave: $('#bookmarkSave'),
-  bookmarkCancel: $('#bookmarkCancel'),
-  
-  // Bookmark list sheet
-  bookmarkListSheet: $('#bookmarkListSheet'),
-  bookmarkListBackdrop: $('#bookmarkListBackdrop'),
-  bookmarkListClose: $('#bookmarkListClose'),
-  bookmarkList: $('#bookmarkList'),
-  clearAllBookmarks: $('#clearAllBookmarks')
-};
-
-// State variables
-let start1Sec = null;
-let start2Sec = null;
-let seekSecVal = 0; // Current seek position (0-5400 seconds)
-let dragging = false;
-let lastX = 0;
-
-// Auto-play state variables
-let isAutoPlaying = false;
-let autoPlayInterval = null;
-let playbackSpeed = 1; // Fixed at 1x speed
-let autoPlayStartTime = null; // เวลาจริงที่เริ่ม auto-play
-let autoPlayStartFieldTime = 0; // เวลาสนามที่เริ่ม auto-play
-
-// Bookmarks system
-let bookmarks = []; // Array of bookmark objects
-const BOOKMARK_STORAGE_KEY = 'ftt_bookmarks';
-
-// Event type configurations
-const EVENT_TYPES = {
-  yellow: { icon: '🟨', name: 'ใบเหลือง', class: 'yellow' },
-  red: { icon: '🟥', name: 'ใบแดง', class: 'red' },
-  penalty: { icon: '🔴', name: 'จุดโทษ', class: 'penalty' },
-  goal: { icon: '⚽', name: 'ประตู', class: 'goal' },
-  substitution: { icon: '🔄', name: 'เปลี่ยนตัว', class: 'substitution' },
-  important: { icon: '⭐', name: 'เหตุการณ์สำคัญ', class: 'important' },
-  custom: { icon: '📝', name: 'กำหนดเอง', class: 'custom' }
-};
-
-/* === Auto-Play Functions === */
-
-function startAutoPlay() {
-  if (isAutoPlaying) return;
-  
-  isAutoPlaying = true;
-  autoPlayStartTime = Date.now();
-  autoPlayStartFieldTime = seekSecVal;
-  
-  // Update button appearance
-  elements.playBtn.textContent = '⏸️ Pause';
-  elements.playBtn.classList.add('playing');
-  
-  // Start the interval (update every 100ms for smooth animation)
-  autoPlayInterval = setInterval(updateAutoPlay, 100);
-  
-  updateAutoStatus();
-}
-
-function stopAutoPlay() {
-  if (!isAutoPlaying) return;
-  
-  isAutoPlaying = false;
-  autoPlayStartTime = null;
-  
-  // Clear the interval
-  if (autoPlayInterval) {
-    clearInterval(autoPlayInterval);
-    autoPlayInterval = null;
-  }
-  
-  // Update button appearance
-  elements.playBtn.textContent = '▶️ Play';
-  elements.playBtn.classList.remove('playing');
-  
-  updateAutoStatus();
-}
-
-function updateAutoPlay() {
-  if (!isAutoPlaying || !autoPlayStartTime) return;
-  
-  // Calculate elapsed time in seconds
-  const elapsedRealTime = (Date.now() - autoPlayStartTime) / 1000;
-  const elapsedFieldTime = elapsedRealTime * playbackSpeed;
-  
-  // Update seek position
-  const newSeekVal = autoPlayStartFieldTime + elapsedFieldTime;
-  
-  // Stop if we've reached the end of the match
-  if (newSeekVal >= MAX_SEC) {
-    seekSecVal = MAX_SEC;
-    stopAutoPlay();
-    render();
-    return;
-  }
-  
-  seekSecVal = Math.min(newSeekVal, MAX_SEC);
-  render();
-}
-
-function updateAutoStatus() {
-  if (!isAutoPlaying) {
-    elements.autoStatus.textContent = 'Paused';
-  } else {
-    elements.autoStatus.textContent = 'Playing';
-  }
-}
-
-/* === Live function === */
-
-function goToLiveTime() {
-  const nowSec = nowSecOfDay();
-  const liveFieldTime = realToFieldSec(nowSec);
-  
-  // Stop auto-play first if running
-  if (isAutoPlaying) {
-    stopAutoPlay();
-  }
-  
-  seekSecVal = Math.max(0, Math.min(liveFieldTime, MAX_SEC));
-  render();
-  
-  // Start auto-play after going to live time
-  startAutoPlay();
-  
-  // Show feedback
-  const liveFeedback = document.createElement('div');
-  liveFeedback.textContent = `🔴 นาที: ${fmtMMSS(seekSecVal)}`;
-  liveFeedback.style.cssText = `
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(33, 150, 243, 0.9);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: bold;
-    z-index: 1000;
-    animation: fadeInOut 2s ease-in-out;
-  `;
-  document.body.appendChild(liveFeedback);
-  setTimeout(() => document.body.removeChild(liveFeedback), 2000);
-}
-
-/* === Time calculation functions === */
-
-// Get start time of first half in seconds of day
-function getStart1Sec() {
-  return +elements.t1h.value * 3600 + +elements.t1m.value * 60;
-}
-
-// Get start time of second half in seconds of day
-function getStart2Sec() {
-  return +elements.t2h.value * 3600 + +elements.t2m.value * 60;
-}
-
-// Get current time in seconds of day
-function nowSecOfDay() {
-  const d = new Date();
-  return d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
-}
-
-// Convert seconds to HH:MM format
-function secToHM(sec) {
-  sec = ((sec % 86400) + 86400) % 86400;
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  return `${pad2(h)}:${pad2(m)}`;
-}
-
-/* === Field time <-> Real time conversion === */
-
-// Convert field time to real time
-function fieldToRealSec(fieldSec) {
-  if (start1Sec == null || start2Sec == null) return null;
-  
-  // First half: 0-45 minutes (0-2700 seconds)
-  if (fieldSec <= 2700) {
-    return start1Sec + fieldSec;
-  }
-  // Second half: 45-90 minutes (2700-5400 seconds)
-  else {
-    return start2Sec + (fieldSec - 2700);
-  }
-}
-
-// Convert real time to field time
-function realToFieldSec(realSec) {
-  if (start1Sec == null || start2Sec == null) return 0;
-  
-  const end1 = start1Sec + 2700;
-  const end2 = start2Sec + 2700;
-  
-  if (realSec < start1Sec) return 0;
-  if (realSec <= end1) return realSec - start1Sec;
-  if (realSec < start2Sec) return 2700;
-  if (realSec <= end2) return 2700 + (realSec - start2Sec);
-  return 5400;
-}
-
-/* === Bookmark management functions === */
-
-// Save bookmarks to localStorage
-function saveBookmarks() {
-  try {
-    localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(bookmarks));
-    console.log('Bookmarks saved:', bookmarks.length);
-  } catch (e) {
-    console.warn('Could not save bookmarks:', e);
-  }
-}
-
-// Load bookmarks from localStorage
-function loadBookmarks() {
-  try {
-    const saved = localStorage.getItem(BOOKMARK_STORAGE_KEY);
-    if (saved) {
-      bookmarks = JSON.parse(saved);
-      console.log('Bookmarks loaded:', bookmarks.length);
-    }
-  } catch (e) {
-    console.warn('Could not load bookmarks:', e);
-    bookmarks = [];
-  }
-}
-
-// Add a new bookmark
-function addBookmark(timeInSeconds, eventType, note = '') {
-  const bookmark = {
-    id: Date.now(), // Simple ID generation
-    time: timeInSeconds,
-    type: eventType,
-    note: note.trim(),
-    created: new Date().toISOString()
-  };
-  
-  bookmarks.push(bookmark);
-  bookmarks.sort((a, b) => a.time - b.time); // Keep sorted by time
-  saveBookmarks();
-  renderBookmarks();
-  updateBookmarkCount();
-}
-
-// Remove a bookmark
-function removeBookmark(bookmarkId) {
-  bookmarks = bookmarks.filter(b => b.id !== bookmarkId);
-  saveBookmarks();
-  renderBookmarks();
-  updateBookmarkCount();
-  renderBookmarkList();
-}
-
-// Clear all bookmarks
-function clearAllBookmarks() {
-  if (bookmarks.length === 0) {
-    alert('ไม่มีเหตุการณ์ให้ลบ');
-    return;
-  }
-  
-  if (confirm(`ต้องการลบเหตุการณ์ทั้งหมด ${bookmarks.length} รายการหรือไม่?\n\nการดำเนินการนี้ไม่สามารถยกเลิกได้`)) {
-    bookmarks = [];
-    saveBookmarks();
-    renderBookmarks();
-    updateBookmarkCount();
-    renderBookmarkList();
-    
-    // Show success feedback
-    const clearedFeedback = document.createElement('div');
-    clearedFeedback.textContent = '✅ ลบเหตุการณ์ทั้งหมดแล้ว';
-    clearedFeedback.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(244, 67, 54, 0.9);
-      color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: bold;
-      z-index: 1000;
-      animation: fadeInOut 2s ease-in-out;
-    `;
-    document.body.appendChild(clearedFeedback);
-    setTimeout(() => document.body.removeChild(clearedFeedback), 2000);
-  }
-}
-
-// Get bookmark at specific time (within 5 seconds tolerance)
-function getBookmarkAtTime(timeInSeconds) {
-  return bookmarks.find(b => Math.abs(b.time - timeInSeconds) <= 5);
-}
-
-// Update bookmark count display
-function updateBookmarkCount() {
-  if (elements.bookmarkCount) {
-    elements.bookmarkCount.textContent = bookmarks.length;
-  }
-}
-
-// Render bookmark markers on the dial
-function renderBookmarks() {
-  const totalWidth = MAX_SEC * PX_PER_SEC;
-  elements.bookmarks.style.width = totalWidth + 'px';
-  elements.bookmarks.innerHTML = '';
-  
-  bookmarks.forEach(bookmark => {
-    const x = bookmark.time * PX_PER_SEC;
-    const marker = document.createElement('div');
-    marker.className = `bookmark-marker ${EVENT_TYPES[bookmark.type].class}`;
-    marker.style.left = (x - 12) + 'px'; // Center the 24px marker
-    marker.innerHTML = EVENT_TYPES[bookmark.type].icon;
-    marker.title = `${fmtMMSS(bookmark.time)} - ${EVENT_TYPES[bookmark.type].name}${bookmark.note ? ': ' + bookmark.note : ''}`;
-    
-    // Click to seek to bookmark time
-    marker.addEventListener('click', () => {
-      addClickEffect(marker);
-      seekToTime(bookmark.time);
-    });
-    
-    elements.bookmarks.appendChild(marker);
-  });
-}
-
-// Render bookmark list in the sheet
-function renderBookmarkList() {
-  if (!elements.bookmarkList) return;
-  
-  if (bookmarks.length === 0) {
-    elements.bookmarkList.innerHTML = '<div class="bookmark-empty">ยังไม่มีเหตุการณ์ที่บันทึกไว้</div>';
-    return;
-  }
-  
-  elements.bookmarkList.innerHTML = bookmarks.map(bookmark => `
-    <div class="bookmark-item">
-      <div class="bookmark-info">
-        <span class="event-icon">${EVENT_TYPES[bookmark.type].icon}</span>
-        <div class="bookmark-details">
-          <div class="bookmark-time">${fmtMMSS(bookmark.time)}</div>
-          ${bookmark.note ? `<div class="bookmark-note">${bookmark.note}</div>` : ''}
-        </div>
-      </div>
-      <div class="bookmark-actions">
-        <button class="bookmark-goto btn-animate" onclick="goToBookmark(${bookmark.time})">ไป</button>
-        <button class="bookmark-delete btn-animate" onclick="deleteBookmark(${bookmark.id})">ลบ</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-// Global functions for inline onclick handlers
-window.goToBookmark = function(time) {
-  seekToTime(time);
-  closeBookmarkListSheet();
-};
-
-window.deleteBookmark = function(id) {
-  if (confirm('ต้องการลบเหตุการณ์นี้หรือไม่?')) {
-    removeBookmark(id);
-  }
-};
-
-// Seek to specific time
-function seekToTime(time) {
-  // Stop auto-play when manually seeking
-  if (isAutoPlaying) {
-    stopAutoPlay();
-  }
-  
-  seekSecVal = time;
-  render();
-}
-
-// Save current seek position
-function saveSeekPosition() {
-  try {
-    localStorage.setItem(LS_KEYS.seekPos, String(seekSecVal));
-  } catch (e) {
-    console.warn('Could not save seek position:', e);
-  }
-}
-
-// Load seek position from localStorage
-function loadSeekPosition() {
-  try {
-    const saved = localStorage.getItem(LS_KEYS.seekPos);
-    if (saved !== null) {
-      const position = parseInt(saved, 10);
-      if (!isNaN(position) && position >= 0 && position <= MAX_SEC) {
-        seekSecVal = position;
-        console.log('Seek position loaded:', position);
-        return true;
-      }
-    }
-  } catch (e) {
-    console.warn('Could not load seek position:', e);
-  }
-  return false;
-}
-
-// Save start times to localStorage
-function saveStarts() {
-  try {
-    localStorage.setItem(LS_KEYS.t1h, String(elements.t1h.value));
-    localStorage.setItem(LS_KEYS.t1m, String(elements.t1m.value));
-    localStorage.setItem(LS_KEYS.t2h, String(elements.t2h.value));
-    localStorage.setItem(LS_KEYS.t2m, String(elements.t2m.value));
-    console.log('Start times saved');
-  } catch (e) {
-    console.warn('Could not save to localStorage:', e);
-  }
-}
-
-// Load start times from localStorage
-function loadStarts() {
-  try {
-    const a = localStorage.getItem(LS_KEYS.t1h);
-    const b = localStorage.getItem(LS_KEYS.t1m);
-    const c = localStorage.getItem(LS_KEYS.t2h);
-    const d = localStorage.getItem(LS_KEYS.t2m);
-    
-    if (a !== null) elements.t1h.value = a;
-    if (b !== null) elements.t1m.value = b;
-    if (c !== null) elements.t2h.value = c;
-    if (d !== null) elements.t2m.value = d;
-    
-    const hasAllSavedTimes = (a && b && c && d) != null;
-    if (hasAllSavedTimes) {
-      console.log('Start times loaded');
-    }
-    return hasAllSavedTimes;
-  } catch (e) {
-    console.warn('Could not load from localStorage:', e);
-    return false;
-  }
-}
-
-/* === UI Building functions === */
-
-// Fill select dropdown with options
-function fillSelect(el, max) {
-  el.innerHTML = '';
-  for (let i = 0; i <= max; i++) {
-    const option = document.createElement('option');
-    option.value = i;
-    option.textContent = pad2(i);
-    el.appendChild(option);
-  }
-}
-
-// Build the time scale ticks
-function buildTicks() {
-  const totalWidth = MAX_SEC * PX_PER_SEC;
-  elements.ticks.style.width = totalWidth + 'px';
-  
-  // Half-time visual split
-  const split = 2700 * PX_PER_SEC;
-  elements.ticks.style.background = 
-    `linear-gradient(90deg, rgba(76,175,80,.15) 0 ${split}px, rgba(139,195,74,.15) ${split}px 100%)`;
-  
-  elements.ticks.innerHTML = '';
-  
-  // Create tick marks every 10 seconds, major ticks every minute
-  for (let s = 0; s <= MAX_SEC; s += 10) {
-    const x = s * PX_PER_SEC;
-    const tick = document.createElement('div');
-    const major = (s % 60 === 0);
-    
-    tick.className = 'tick' + (major ? ' major' : '');
-    tick.style.left = x + 'px';
-    
-    // Add time labels to major ticks
-    if (major) {
-      const m = Math.floor(s / 60);
-      const label = document.createElement('div');
-      label.className = 'label ' + (m < 45 ? 'gr' : (m === 45 ? 'bd' : 'pu'));
-      label.textContent = `${pad2(m)}:00`;
-      tick.appendChild(label);
-    }
-    
-    elements.ticks.appendChild(tick);
-  }
-}
-
-/* === Rendering function === */
-
-function render() {
-  const containerWidth = elements.wrap.clientWidth;
-  const left = containerWidth / 2 - (seekSecVal * PX_PER_SEC);
-  
-  // Move the scale to show current time position
-  elements.scale.style.transform = `translateX(${left}px)`;
-  
-  // Update half indicator styling
-  const pill = elements.barFieldPill;
-  const isFirstHalf = seekSecVal < 2700;
-  pill.classList.toggle('h1', isFirstHalf);
-  pill.classList.toggle('h2', !isFirstHalf);
-  
-  // Update field time display
-  elements.barField.textContent = fmtMMSS(seekSecVal);
-  
-  // Update real time display
-  const realSec = fieldToRealSec(seekSecVal);
-  elements.barReal.textContent = realSec == null ? '--:--' : secToHM(realSec);
-  
-  // Save current position to localStorage
-  saveSeekPosition();
-}
-
-/* === Interaction handlers === */
-
-// Helper functions for drag/interaction
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function pxToSec(px) {
-  return px / PX_PER_SEC;
-}
-
-// Add button click animation effect
-function addClickEffect(button) {
-  button.style.transform = 'scale(0.95)';
-  setTimeout(() => {
-    button.style.transform = '';
-  }, 150);
-}
-
-/* === Event Listeners === */
-
-// Auto-play button
-elements.playBtn.addEventListener('click', () => {
-  addClickEffect(elements.playBtn);
-  
-  if (isAutoPlaying) {
-    stopAutoPlay();
-  } else {
-    startAutoPlay();
-  }
-});
-
-// Live button
-elements.liveBtn.addEventListener('click', () => {
-  addClickEffect(elements.liveBtn);
-  goToLiveTime();
-});
-
-// Drag interactions on tuner
-elements.wrap.addEventListener('pointerdown', e => {
-  // Stop auto-play when user starts dragging
-  if (isAutoPlaying) {
-    stopAutoPlay();
-  }
-  
-  dragging = true;
-  lastX = e.clientX;
-  elements.scale.classList.add('dragging');
-  elements.wrap.setPointerCapture(e.pointerId);
-});
-
-elements.wrap.addEventListener('pointermove', e => {
-  if (!dragging) return;
-  
-  const dx = e.clientX - lastX;
-  lastX = e.clientX;
-  seekSecVal = clamp(seekSecVal - pxToSec(dx), 0, MAX_SEC);
-  render();
-});
-
-elements.wrap.addEventListener('pointerup', e => {
-  dragging = false;
-  elements.scale.classList.remove('dragging');
-  elements.wrap.releasePointerCapture(e.pointerId);
-});
-
-elements.wrap.addEventListener('pointercancel', () => {
-  dragging = false;
-  elements.scale.classList.remove('dragging');
-});
-
-// Wheel/scroll interaction
-elements.wrap.addEventListener('wheel', e => {
-  e.preventDefault();
-  
-  // Stop auto-play when user scrolls
-  if (isAutoPlaying) {
-    stopAutoPlay();
-  }
-  
-  const step = e.shiftKey ? 30 : 5;
-  const direction = (e.deltaY > 0 || e.deltaX > 0) ? 1 : -1;
-  seekSecVal = clamp(seekSecVal + direction * step, 0, MAX_SEC);
-  render();
-}, { passive: false });
-
-// Keyboard navigation
-window.addEventListener('keydown', e => {
-  if (e.key === 'ArrowLeft') {
-    // Stop auto-play when using keyboard
-    if (isAutoPlaying) {
-      stopAutoPlay();
-    }
-    seekSecVal = clamp(seekSecVal - (e.shiftKey ? 30 : 5), 0, MAX_SEC);
-    render();
-  }
-  if (e.key === 'ArrowRight') {
-    // Stop auto-play when using keyboard
-    if (isAutoPlaying) {
-      stopAutoPlay();
-    }
-    seekSecVal = clamp(seekSecVal + (e.shiftKey ? 30 : 5), 0, MAX_SEC);
-    render();
-  }
-  if (e.key === ' ') {
-    e.preventDefault();
-    // Spacebar toggles auto-play
-    if (isAutoPlaying) {
-      stopAutoPlay();
-    } else {
-      startAutoPlay();
-    }
-  }
-});
-
-/* === Bottom sheet (seek picker) === */
-
-function openSheet() {
-  elements.sheetMin.value = Math.floor(seekSecVal / 60);
-  elements.sheetSec.value = Math.floor(seekSecVal % 60);
-  elements.sheet.classList.add('open');
-  elements.backdrop.classList.add('open');
-}
-
-function closeSheet() {
-  elements.sheet.classList.remove('open');
-  elements.backdrop.classList.remove('open');
-}
-
-/* === Bookmark sheet management === */
-
-function openBookmarkSheet() {
-  elements.bookmarkTime.textContent = fmtMMSS(seekSecVal);
-  elements.bookmarkNote.value = '';
-  // Reset to yellow card as default
-  const yellowRadio = document.querySelector('input[name="eventType"][value="yellow"]');
-  if (yellowRadio) yellowRadio.checked = true;
-  
-  elements.bookmarkSheet.classList.add('open');
-  elements.bookmarkBackdrop.classList.add('open');
-}
-
-function closeBookmarkSheet() {
-  elements.bookmarkSheet.classList.remove('open');
-  elements.bookmarkBackdrop.classList.remove('open');
-}
-
-function openBookmarkListSheet() {
-  renderBookmarkList();
-  elements.bookmarkListSheet.classList.add('open');
-  elements.bookmarkListBackdrop.classList.add('open');
-}
-
-function closeBookmarkListSheet() {
-  elements.bookmarkListSheet.classList.remove('open');
-  elements.bookmarkListBackdrop.classList.remove('open');
-}
-
-// Sheet event listeners
-elements.barFieldPill.addEventListener('click', () => {
-  addClickEffect(elements.barFieldPill);
-  setTimeout(openSheet, 100);
-});
-
-elements.backdrop.addEventListener('click', closeSheet);
-
-elements.sheetCancel.addEventListener('click', () => {
-  addClickEffect(elements.sheetCancel);
-  closeSheet();
-});
-
-elements.sheetGo.addEventListener('click', () => {
-  addClickEffect(elements.sheetGo);
-  const minutes = +elements.sheetMin.value || 0;
-  const seconds = +elements.sheetSec.value || 0;
-  const newTime = clamp(minutes * 60 + seconds, 0, MAX_SEC);
-  seekToTime(newTime);
-  closeSheet();
-});
-
-// Quick time buttons
-elements.quick0.addEventListener('click', () => {
-  addClickEffect(elements.quick0);
-  elements.sheetMin.value = 0;
-  elements.sheetSec.value = 0;
-  setTimeout(() => elements.sheetGo.click(), 100);
-});
-
-elements.quick45.addEventListener('click', () => {
-  addClickEffect(elements.quick45);
-  elements.sheetMin.value = 45;
-  elements.sheetSec.value = 0;
-  setTimeout(() => elements.sheetGo.click(), 100);
-});
-
-elements.quick90.addEventListener('click', () => {
-  addClickEffect(elements.quick90);
-  elements.sheetMin.value = 90;
-  elements.sheetSec.value = 0;
-  setTimeout(() => elements.sheetGo.click(), 100);
-});
-
-/* === Bookmark event listeners === */
-
-// Add bookmark button
-elements.addBookmarkBtn.addEventListener('click', () => {
-  addClickEffect(elements.addBookmarkBtn);
-  setTimeout(openBookmarkSheet, 100);
-});
-
-// View bookmarks button
-elements.viewBookmarksBtn.addEventListener('click', () => {
-  addClickEffect(elements.viewBookmarksBtn);
-  setTimeout(openBookmarkListSheet, 100);
-});
-
-// Bookmark sheet controls
-elements.bookmarkBackdrop.addEventListener('click', closeBookmarkSheet);
-elements.bookmarkCancel.addEventListener('click', () => {
-  addClickEffect(elements.bookmarkCancel);
-  closeBookmarkSheet();
-});
-
-elements.bookmarkSave.addEventListener('click', () => {
-  addClickEffect(elements.bookmarkSave);
-  
-  const selectedType = document.querySelector('input[name="eventType"]:checked');
-  if (!selectedType) return;
-  
-  const eventType = selectedType.value;
-  const note = elements.bookmarkNote.value;
-  
-  // Check if bookmark already exists at this time
-  const existingBookmark = getBookmarkAtTime(seekSecVal);
-  if (existingBookmark) {
-    if (!confirm('มีเหตุการณ์อยู่แล้วในเวลานี้ ต้องการเขียนทับหรือไม่?')) {
-      return;
-    }
-    removeBookmark(existingBookmark.id);
-  }
-  
-  addBookmark(seekSecVal, eventType, note);
-  closeBookmarkSheet();
-  
-  // Show success feedback
-  const savedFeedback = document.createElement('div');
-  savedFeedback.textContent = '✅ บันทึกเหตุการณ์แล้ว';
-  savedFeedback.style.cssText = `
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(76, 175, 80, 0.9);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: bold;
-    z-index: 1000;
-    animation: fadeInOut 2s ease-in-out;
-  `;
-  document.body.appendChild(savedFeedback);
-  setTimeout(() => document.body.removeChild(savedFeedback), 2000);
-});
-
-// Bookmark list sheet controls
-elements.bookmarkListBackdrop.addEventListener('click', closeBookmarkListSheet);
-elements.bookmarkListClose.addEventListener('click', () => {
-  addClickEffect(elements.bookmarkListClose);
-  closeBookmarkListSheet();
-});
-
-// Clear all bookmarks button
-elements.clearAllBookmarks.addEventListener('click', () => {
-  addClickEffect(elements.clearAllBookmarks);
-  setTimeout(clearAllBookmarks, 100);
-});
-
-/* === Start time controls === */
-
-function syncStarts() {
-  start1Sec = getStart1Sec();
-  start2Sec = getStart2Sec();
-  saveStarts();
-  render();
-}
-
-// Listen to dropdown changes
-[elements.t1h, elements.t1m, elements.t2h, elements.t2m].forEach(el => {
-  el.addEventListener('change', syncStarts);
-});
-
-// "Now" buttons
-elements.t1now.addEventListener('click', () => {
-  addClickEffect(elements.t1now);
-  const now = new Date();
-  elements.t1h.value = now.getHours();
-  elements.t1m.value = now.getMinutes();
-  syncStarts();
-});
-
-elements.t2now.addEventListener('click', () => {
-  addClickEffect(elements.t2now);
-  const now = new Date();
-  elements.t2h.value = now.getHours();
-  elements.t2m.value = now.getMinutes();
-  syncStarts();
-});
-
-/* === Initialization === */
-
-function init() {
-  // Fill all dropdown selects
-  fillSelect(elements.t1h, 23);
-  fillSelect(elements.t2h, 23);
-  fillSelect(elements.t1m, 59);
-  fillSelect(elements.t2m, 59);
-  fillSelect(elements.sheetMin, 90);
-  fillSelect(elements.sheetSec, 59);
-  
-  // Load saved start times or set defaults
-  const hadSavedTimes = loadStarts();
-  
-  if (!hadSavedTimes) {
-    // Set default times: first half now, second half 55 minutes later
-    const now = new Date();
-    elements.t1h.value = now.getHours();
-    elements.t1m.value = now.getMinutes();
-    
-    const secondHalfStart = new Date(now.getTime() + 55 * 60000);
-    elements.t2h.value = secondHalfStart.getHours();
-    elements.t2m.value = secondHalfStart.getMinutes();
-  }
-  
-  // Load bookmarks
-  loadBookmarks();
-  updateBookmarkCount();
-  
-  // Build the visual components
-  buildTicks();
-  syncStarts();
-  
-  // Load saved seek position or start at the beginning
-  const hadSavedPosition = loadSeekPosition();
-  if (!hadSavedPosition) {
-    seekSecVal = 0;
-  }
-  
-  render();
-  renderBookmarks();
-  
-  // Initialize auto-play status
-  updateAutoStatus();
-  
-  // Show restoration message if data was loaded
-  if (hadSavedTimes || hadSavedPosition || bookmarks.length > 0) {
-    const restoredItems = [];
-    if (hadSavedTimes) restoredItems.push('เวลาเริ่มแมต์ช');
-    if (hadSavedPosition) restoredItems.push('ตำแหน่งเวลา');
-    if (bookmarks.length > 0) restoredItems.push(`เหตุการณ์ ${bookmarks.length} รายการ`);
-    
-    const restoredFeedback = document.createElement('div');
-    restoredFeedback.textContent = `✅ กู้คืนข้อมูล: ${restoredItems.join(', ')}`;
-    restoredFeedback.style.cssText = `
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(76, 175, 80, 0.9);
-      color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: bold;
-      z-index: 1000;
-      animation: fadeInOut 3s ease-in-out;
-      font-size: 14px;
-    `;
-    document.body.appendChild(restoredFeedback);
-    setTimeout(() => {
-      if (document.body.contains(restoredFeedback)) {
-        document.body.removeChild(restoredFeedback);
-      }
-    }, 3000);
-  }
-}
-
-// Handle window resize
-window.addEventListener('resize', render);
-
-// Start the application when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
-
-// Add some extra polish: update real time display every second
-setInterval(() => {
-  // Only update if we're showing a valid real time
-  if (start1Sec !== null && start2Sec !== null) {
-    const realSec = fieldToRealSec(seekSecVal);
-    if (realSec !== null) {
-      elements.barReal.textContent = secToHM(realSec);
-    }
-  }
-}, 1000);
-</script>
 </body>
 </html>
