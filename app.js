@@ -3,7 +3,12 @@
 // Configuration constants
 const tz = 'Asia/Bangkok';
 const MAX_SEC = 150 * 60; // 150 minutes (enough for very long extra time)
-const PX_PER_SEC = 3;
+const BASE_PX_PER_SEC = 3; // Base pixels per second
+
+// Zoom system
+let currentZoomLevel = 1; // 1x zoom by default
+const ZOOM_LEVELS = [0.25, 0.5, 1, 2, 4, 8]; // Available zoom levels
+let PX_PER_SEC = BASE_PX_PER_SEC; // Current pixels per second (changes with zoom)
 
 // PDF Export libraries - loaded dynamically
 let html2canvas = null;
@@ -51,6 +56,12 @@ const elements = {
   playBtn: $('#playBtn'),
   liveBtn: $('#liveBtn'),
   autoStatus: $('#autoStatus'),
+  
+  // Zoom controls
+  zoomInBtn: $('#zoomInBtn'),
+  zoomOutBtn: $('#zoomOutBtn'),
+  zoomResetBtn: $('#zoomResetBtn'),
+  zoomLevel: $('#zoomLevel'),
   
   // Tuner components
   wrap: $('#wrap'),
@@ -588,6 +599,54 @@ function showSuccessMessage(message) {
       document.body.removeChild(successEl);
     }
   }, 3000);
+}
+
+/* === Zoom Functions === */
+
+function updateZoom() {
+  PX_PER_SEC = BASE_PX_PER_SEC * currentZoomLevel;
+  buildTicks();
+  render();
+  renderBookmarks();
+  updateZoomDisplay();
+}
+
+function zoomIn() {
+  const currentIndex = ZOOM_LEVELS.indexOf(currentZoomLevel);
+  if (currentIndex < ZOOM_LEVELS.length - 1) {
+    currentZoomLevel = ZOOM_LEVELS[currentIndex + 1];
+    updateZoom();
+  }
+}
+
+function zoomOut() {
+  const currentIndex = ZOOM_LEVELS.indexOf(currentZoomLevel);
+  if (currentIndex > 0) {
+    currentZoomLevel = ZOOM_LEVELS[currentIndex - 1];
+    updateZoom();
+  }
+}
+
+function resetZoom() {
+  currentZoomLevel = 1;
+  updateZoom();
+}
+
+function updateZoomDisplay() {
+  if (elements.zoomLevel) {
+    elements.zoomLevel.textContent = `${currentZoomLevel}x`;
+  }
+  
+  // Update button states
+  if (elements.zoomInBtn) {
+    const currentIndex = ZOOM_LEVELS.indexOf(currentZoomLevel);
+    elements.zoomInBtn.disabled = currentIndex >= ZOOM_LEVELS.length - 1;
+  }
+  
+  if (elements.zoomOutBtn) {
+    const currentIndex = ZOOM_LEVELS.indexOf(currentZoomLevel);
+    elements.zoomOutBtn.disabled = currentIndex <= 0;
+  }
 }
 
 /* === Auto-Play Functions === */
@@ -1245,44 +1304,67 @@ function buildTicks() {
   
   elements.ticks.innerHTML = '';
   
-  // Create ticks every 5 minutes for better performance with longer timeline
-  for (let s = 0; s <= MAX_SEC; s += 300) { // Every 5 minutes
+  // Determine tick interval based on zoom level
+  let tickInterval = 60; // Default: every minute
+  let majorTickInterval = 300; // Default: every 5 minutes
+  
+  if (currentZoomLevel <= 0.5) {
+    // Zoomed out: less dense ticks
+    tickInterval = 300; // Every 5 minutes
+    majorTickInterval = 900; // Every 15 minutes
+  } else if (currentZoomLevel >= 4) {
+    // Zoomed in: more dense ticks
+    tickInterval = 30; // Every 30 seconds
+    majorTickInterval = 300; // Every 5 minutes
+  } else if (currentZoomLevel >= 2) {
+    // Medium zoom in: moderate density
+    tickInterval = 60; // Every minute
+    majorTickInterval = 300; // Every 5 minutes
+  }
+  
+  // Create ticks
+  for (let s = 0; s <= MAX_SEC; s += tickInterval) {
     const x = s * PX_PER_SEC;
     const tick = document.createElement('div');
-    tick.className = 'tick major';
+    const isMajor = (s % majorTickInterval === 0);
+    
+    tick.className = 'tick' + (isMajor ? ' major' : '');
     tick.style.left = x + 'px';
     
-    const label = document.createElement('div');
-    
-    // Determine the display text and color based on the time period
-    let labelText = '';
-    let labelClass = '';
-    
-    if (s <= 2700) {
-      // First half (0-45)
-      const minutes = Math.floor(s / 60);
-      labelText = `${pad2(minutes)}:00`;
-      labelClass = 'gr';
-    } else if (s <= FIRST_HALF_MAX) {
-      // First half extra time (45+0 to 45+30)
-      const extraMinutes = Math.floor((s - 2700) / 60);
-      labelText = `45+${extraMinutes}:00`;
-      labelClass = 'et1';
-    } else if (s <= FIRST_HALF_MAX + 2700) {
-      // Second half (45-90)
-      const totalMinutes = 45 + Math.floor((s - FIRST_HALF_MAX) / 60);
-      labelText = `${pad2(totalMinutes)}:00`;
-      labelClass = 'pu';
-    } else {
-      // Second half extra time (90+0 to 90+∞)
-      const extraMinutes = Math.floor((s - FIRST_HALF_MAX - 2700) / 60);
-      labelText = `90+${extraMinutes}:00`;
-      labelClass = 'et2';
+    // Add labels to major ticks or when zoomed in enough
+    if (isMajor || (currentZoomLevel >= 2 && s % 60 === 0)) {
+      const label = document.createElement('div');
+      
+      // Determine the display text and color based on the time period
+      let labelText = '';
+      let labelClass = '';
+      
+      if (s <= 2700) {
+        // First half (0-45)
+        const minutes = Math.floor(s / 60);
+        labelText = currentZoomLevel >= 2 ? `${pad2(minutes)}:00` : `${minutes}'`;
+        labelClass = 'gr';
+      } else if (s <= FIRST_HALF_MAX) {
+        // First half extra time (45+0 to 45+30)
+        const extraMinutes = Math.floor((s - 2700) / 60);
+        labelText = currentZoomLevel >= 2 ? `45+${extraMinutes}:00` : `45+${extraMinutes}'`;
+        labelClass = 'et1';
+      } else if (s <= FIRST_HALF_MAX + 2700) {
+        // Second half (45-90)
+        const totalMinutes = 45 + Math.floor((s - FIRST_HALF_MAX) / 60);
+        labelText = currentZoomLevel >= 2 ? `${pad2(totalMinutes)}:00` : `${totalMinutes}'`;
+        labelClass = 'pu';
+      } else {
+        // Second half extra time (90+0 to 90+∞)
+        const extraMinutes = Math.floor((s - FIRST_HALF_MAX - 2700) / 60);
+        labelText = currentZoomLevel >= 2 ? `90+${extraMinutes}:00` : `90+${extraMinutes}'`;
+        labelClass = 'et2';
+      }
+      
+      label.className = 'label ' + labelClass;
+      label.textContent = labelText;
+      tick.appendChild(label);
     }
-    
-    label.className = 'label ' + labelClass;
-    label.textContent = labelText;
-    tick.appendChild(label);
     
     elements.ticks.appendChild(tick);
   }
@@ -1375,6 +1457,28 @@ elements.liveBtn.addEventListener('click', () => {
   goToLiveTime();
 });
 
+// Zoom control event listeners
+if (elements.zoomInBtn) {
+  elements.zoomInBtn.addEventListener('click', () => {
+    addClickEffect(elements.zoomInBtn);
+    zoomIn();
+  });
+}
+
+if (elements.zoomOutBtn) {
+  elements.zoomOutBtn.addEventListener('click', () => {
+    addClickEffect(elements.zoomOutBtn);
+    zoomOut();
+  });
+}
+
+if (elements.zoomResetBtn) {
+  elements.zoomResetBtn.addEventListener('click', () => {
+    addClickEffect(elements.zoomResetBtn);
+    resetZoom();
+  });
+}
+
 elements.wrap.addEventListener('pointerdown', e => {
   if (isAutoPlaying) {
     stopAutoPlay();
@@ -1441,6 +1545,19 @@ window.addEventListener('keydown', e => {
     } else {
       startAutoPlay();
     }
+  }
+  // Zoom shortcuts
+  if (e.key === '=' || e.key === '+') {
+    e.preventDefault();
+    zoomIn();
+  }
+  if (e.key === '-') {
+    e.preventDefault();
+    zoomOut();
+  }
+  if (e.key === '0') {
+    e.preventDefault();
+    resetZoom();
   }
 });
 
@@ -1726,6 +1843,7 @@ function init() {
   renderBookmarks();
   
   updateAutoStatus();
+  updateZoomDisplay(); // Initialize zoom display
   
   if (hadSavedTimes || hadSavedPosition || bookmarks.length > 0 || hadSavedTeams) {
     const restoredItems = [];
