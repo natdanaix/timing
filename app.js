@@ -132,6 +132,34 @@ const EVENT_TYPES = {
 
 /* === PDF Export Functions === */
 
+// Format time for PDF display (45+extra format)
+function formatTimeForPDF(timeInSeconds) {
+  const FIRST_HALF_MAX = 4500; // 75 minutes
+  
+  if (timeInSeconds <= 2700) {
+    // First half (0-45:00)
+    return fmtMMSS(timeInSeconds);
+  } else if (timeInSeconds <= FIRST_HALF_MAX) {
+    // First half extra time (45+0:01 to 45+30:00)
+    const extraTime = timeInSeconds - 2700;
+    const extraMinutes = Math.floor(extraTime / 60);
+    const extraSeconds = Math.floor(extraTime % 60);
+    return `45+${extraMinutes}:${pad2(extraSeconds)}`;
+  } else if (timeInSeconds <= FIRST_HALF_MAX + 2700) {
+    // Second half (45:01-90:00 equivalent)
+    const secondHalfTime = timeInSeconds - FIRST_HALF_MAX;
+    const totalMinutes = 45 + Math.floor(secondHalfTime / 60);
+    const seconds = Math.floor(secondHalfTime % 60);
+    return `${pad2(totalMinutes)}:${pad2(seconds)}`;
+  } else {
+    // Second half extra time (90+0:01 to 90+∞)
+    const extraTime = timeInSeconds - (FIRST_HALF_MAX + 2700);
+    const extraMinutes = Math.floor(extraTime / 60);
+    const extraSeconds = Math.floor(extraTime % 60);
+    return `90+${extraMinutes}:${pad2(extraSeconds)}`;
+  }
+}
+
 // Load external libraries for PDF export
 async function loadPDFLibraries() {
   if (html2canvas && jsPDF) return true;
@@ -235,7 +263,7 @@ function generateMatchStats() {
     matchEnd,
     totalEvents: bookmarks.length,
     statsByType,
-    currentPosition: fmtMMSS(seekSecVal),
+    currentPosition: formatTimeForPDF(seekSecVal), // ใช้ formatTimeForPDF แทน fmtMMSS
     exportTime: now.toLocaleString('th-TH', { timeZone: tz })
   };
 }
@@ -477,7 +505,7 @@ function createEventsPageHTML(pageBookmarks, pageNumber, totalPages, stats) {
           <span style="font-size: 18px;">${eventType.icon}</span>
         </td>
         <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; width: 80px;">
-          ${fmtMMSS(bookmark.time)}
+          ${formatTimeForPDF(bookmark.time)}
         </td>
         <td style="padding: 8px; border: 1px solid #ddd; width: 120px;">
           ${eventType.name}
@@ -637,7 +665,7 @@ function goToLiveTime() {
   startAutoPlay();
   
   const liveFeedback = document.createElement('div');
-  liveFeedback.textContent = `🔴 นาที ${fmtMMSS(seekSecVal)}`;
+  liveFeedback.textContent = `🔴 นาที ${formatTimeForPDF(seekSecVal)}`;
   liveFeedback.style.cssText = `
     position: fixed;
     top: 50%;
@@ -1073,7 +1101,7 @@ function renderBookmarks() {
     marker.className = `bookmark-marker ${EVENT_TYPES[bookmark.type].class}`;
     marker.style.left = (x - 12) + 'px';
     marker.innerHTML = EVENT_TYPES[bookmark.type].icon;
-    marker.title = `${fmtMMSS(bookmark.time)} - ${EVENT_TYPES[bookmark.type].name}${bookmark.note ? ': ' + bookmark.note : ''}`;
+    marker.title = `${formatTimeForPDF(bookmark.time)} - ${EVENT_TYPES[bookmark.type].name}${bookmark.note ? ': ' + bookmark.note : ''}`;
     
     marker.addEventListener('click', () => {
       addClickEffect(marker);
@@ -1097,7 +1125,7 @@ function renderBookmarkList() {
       <div class="bookmark-info">
         <span class="event-icon">${EVENT_TYPES[bookmark.type].icon}</span>
         <div class="bookmark-details">
-          <div class="bookmark-time">${fmtMMSS(bookmark.time)}</div>
+          <div class="bookmark-time">${formatTimeForPDF(bookmark.time)}</div>
           ${bookmark.note ? `<div class="bookmark-note">${bookmark.note}</div>` : ''}
         </div>
       </div>
@@ -1433,7 +1461,7 @@ function closeSheet() {
 /* === Bookmark sheet management === */
 
 function openBookmarkSheet() {
-  elements.bookmarkTime.textContent = fmtMMSS(seekSecVal);
+  elements.bookmarkTime.textContent = formatTimeForPDF(seekSecVal);
   elements.bookmarkNote.value = '';
   elements.bookmarkDropdown.value = '';
   const yellowRadio = document.querySelector('input[name="eventType"][value="yellow"]');
