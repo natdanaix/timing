@@ -2,7 +2,7 @@
 
 // Configuration constants
 const tz = 'Asia/Bangkok';
-const MAX_SEC = 110 * 60; // 110 minutes (45+10 for first half, 45+10 for second half)
+const MAX_SEC = 150 * 60; // 150 minutes (enough for very long extra time)
 const PX_PER_SEC = 3;
 
 // PDF Export libraries - loaded dynamically
@@ -868,14 +868,15 @@ function secToHM(sec) {
 function fieldToRealSec(fieldSec) {
   if (start1Sec == null || start2Sec == null) return null;
   
-  // First half and its extra time (0-3300 seconds = 0-55 minutes)
-  if (fieldSec <= 3300) {
+  const FIRST_HALF_MAX = 4500; // 75 minutes = 45 regular + up to 30 extra
+  
+  // First half and its extra time
+  if (fieldSec <= FIRST_HALF_MAX) {
     return start1Sec + fieldSec;
   }
-  // Second half and its extra time (3300-6600 seconds = 55-110 minutes)
+  // Second half and its extra time  
   else {
-    // Map field time 3301-6600 to real time starting from start2Sec
-    const secondHalfFieldTime = fieldSec - 3300;
+    const secondHalfFieldTime = fieldSec - FIRST_HALF_MAX;
     return start2Sec + secondHalfFieldTime;
   }
 }
@@ -883,28 +884,19 @@ function fieldToRealSec(fieldSec) {
 function realToFieldSec(realSec) {
   if (start1Sec == null || start2Sec == null) return 0;
   
-  const firstHalfMaxEnd = start1Sec + 3300; // First half + up to 10 minutes extra
-  const secondHalfMaxEnd = start2Sec + 3300; // Second half + up to 10 minutes extra
+  const FIRST_HALF_MAX = 4500; // 75 minutes = 45 regular + up to 30 extra
   
   // First half period (including extra time)
-  if (realSec >= start1Sec && realSec <= firstHalfMaxEnd) {
-    return realSec - start1Sec;
+  if (realSec >= start1Sec && realSec < start2Sec) {
+    return Math.min(realSec - start1Sec, FIRST_HALF_MAX);
   }
   // Second half period (including extra time)
-  else if (realSec >= start2Sec && realSec <= secondHalfMaxEnd) {
-    return 3300 + (realSec - start2Sec);
+  else if (realSec >= start2Sec) {
+    return FIRST_HALF_MAX + (realSec - start2Sec);
   }
   // Before first half
-  else if (realSec < start1Sec) {
-    return 0;
-  }
-  // Between halves
-  else if (realSec > firstHalfMaxEnd && realSec < start2Sec) {
-    return 3300; // End of first half + extra time
-  }
-  // After second half
   else {
-    return 6600; // Maximum time
+    return 0;
   }
 }
 
@@ -1208,10 +1200,12 @@ function buildTicks() {
   const totalWidth = MAX_SEC * PX_PER_SEC;
   elements.ticks.style.width = totalWidth + 'px';
   
+  const FIRST_HALF_MAX = 4500; // 75 minutes
+  
   // Create background zones for different periods
   const split1 = 2700 * PX_PER_SEC; // End of first half (45:00)
-  const split2 = 3300 * PX_PER_SEC; // End of first half extra time (45+10:00)
-  const split3 = 6000 * PX_PER_SEC; // End of second half (90:00)
+  const split2 = FIRST_HALF_MAX * PX_PER_SEC; // End of first half extra time
+  const split3 = (FIRST_HALF_MAX + 2700) * PX_PER_SEC; // End of second half (90:00)
   
   elements.ticks.style.background = `
     linear-gradient(90deg, 
@@ -1223,47 +1217,44 @@ function buildTicks() {
   
   elements.ticks.innerHTML = '';
   
-  for (let s = 0; s <= MAX_SEC; s += 60) { // Every minute instead of every 10 seconds for cleaner display
+  // Create ticks every 5 minutes for better performance with longer timeline
+  for (let s = 0; s <= MAX_SEC; s += 300) { // Every 5 minutes
     const x = s * PX_PER_SEC;
     const tick = document.createElement('div');
-    const major = (s % 300 === 0); // Major tick every 5 minutes
-    
-    tick.className = 'tick' + (major ? ' major' : '');
+    tick.className = 'tick major';
     tick.style.left = x + 'px';
     
-    if (major) {
-      const label = document.createElement('div');
-      
-      // Determine the display text and color based on the time period
-      let labelText = '';
-      let labelClass = '';
-      
-      if (s <= 2700) {
-        // First half (0-45)
-        const minutes = Math.floor(s / 60);
-        labelText = `${pad2(minutes)}:00`;
-        labelClass = 'gr';
-      } else if (s <= 3300) {
-        // First half extra time (45+0 to 45+10)
-        const extraMinutes = Math.floor((s - 2700) / 60);
-        labelText = `45+${extraMinutes}:00`;
-        labelClass = 'et1';
-      } else if (s <= 6000) {
-        // Second half (45-90)
-        const totalMinutes = 45 + Math.floor((s - 3300) / 60);
-        labelText = `${pad2(totalMinutes)}:00`;
-        labelClass = 'pu';
-      } else {
-        // Second half extra time (90+0 to 90+10)
-        const extraMinutes = Math.floor((s - 6000) / 60);
-        labelText = `90+${extraMinutes}:00`;
-        labelClass = 'et2';
-      }
-      
-      label.className = 'label ' + labelClass;
-      label.textContent = labelText;
-      tick.appendChild(label);
+    const label = document.createElement('div');
+    
+    // Determine the display text and color based on the time period
+    let labelText = '';
+    let labelClass = '';
+    
+    if (s <= 2700) {
+      // First half (0-45)
+      const minutes = Math.floor(s / 60);
+      labelText = `${pad2(minutes)}:00`;
+      labelClass = 'gr';
+    } else if (s <= FIRST_HALF_MAX) {
+      // First half extra time (45+0 to 45+30)
+      const extraMinutes = Math.floor((s - 2700) / 60);
+      labelText = `45+${extraMinutes}:00`;
+      labelClass = 'et1';
+    } else if (s <= FIRST_HALF_MAX + 2700) {
+      // Second half (45-90)
+      const totalMinutes = 45 + Math.floor((s - FIRST_HALF_MAX) / 60);
+      labelText = `${pad2(totalMinutes)}:00`;
+      labelClass = 'pu';
+    } else {
+      // Second half extra time (90+0 to 90+∞)
+      const extraMinutes = Math.floor((s - FIRST_HALF_MAX - 2700) / 60);
+      labelText = `90+${extraMinutes}:00`;
+      labelClass = 'et2';
     }
+    
+    label.className = 'label ' + labelClass;
+    label.textContent = labelText;
+    tick.appendChild(label);
     
     elements.ticks.appendChild(tick);
   }
@@ -1282,6 +1273,8 @@ function render() {
   // Remove all period classes
   pill.classList.remove('h1', 'h2', 'et1', 'et2');
   
+  const FIRST_HALF_MAX = 4500; // 75 minutes
+  
   // Format field time display with extra time notation
   let displayText = '';
   
@@ -1289,24 +1282,24 @@ function render() {
     // First half (0-45:00)
     pill.classList.add('h1');
     displayText = fmtMMSS(seekSecVal);
-  } else if (seekSecVal <= 3300) {
-    // First half extra time (45+0:01 to 45+10:00)
+  } else if (seekSecVal <= FIRST_HALF_MAX) {
+    // First half extra time (45+0:01 to 45+30:00)
     pill.classList.add('et1');
     const extraTime = seekSecVal - 2700;
     const extraMinutes = Math.floor(extraTime / 60);
     const extraSeconds = Math.floor(extraTime % 60);
     displayText = `45+${extraMinutes}:${pad2(extraSeconds)}`;
-  } else if (seekSecVal <= 6000) {
+  } else if (seekSecVal <= FIRST_HALF_MAX + 2700) {
     // Second half (45:01-90:00 equivalent)
     pill.classList.add('h2');
-    const secondHalfTime = seekSecVal - 3300;
+    const secondHalfTime = seekSecVal - FIRST_HALF_MAX;
     const totalMinutes = 45 + Math.floor(secondHalfTime / 60);
     const seconds = Math.floor(secondHalfTime % 60);
     displayText = `${pad2(totalMinutes)}:${pad2(seconds)}`;
   } else {
-    // Second half extra time (90+0:01 to 90+10:00)
+    // Second half extra time (90+0:01 to 90+∞)
     pill.classList.add('et2');
-    const extraTime = seekSecVal - 6000;
+    const extraTime = seekSecVal - (FIRST_HALF_MAX + 2700);
     const extraMinutes = Math.floor(extraTime / 60);
     const extraSeconds = Math.floor(extraTime % 60);
     displayText = `90+${extraMinutes}:${pad2(extraSeconds)}`;
@@ -1514,6 +1507,7 @@ elements.quick90.addEventListener('click', () => {
 // Add quick buttons for extra time
 const quick45plus5 = $('#quick45plus5');
 const quick90plus5 = $('#quick90plus5');
+const quick90plus10 = $('#quick90plus10');
 
 if (quick45plus5) {
   quick45plus5.addEventListener('click', () => {
@@ -1528,8 +1522,18 @@ if (quick45plus5) {
 if (quick90plus5) {
   quick90plus5.addEventListener('click', () => {
     addClickEffect(quick90plus5);
-    // 90+5 = 6000 + 300 = 6300 seconds  
-    seekSecVal = 6300;
+    // 90+5 = 4500 (first half max) + 2700 (second half) + 300 (5 minutes extra) = 7500 seconds  
+    seekSecVal = 7500;
+    render();
+    closeSheet();
+  });
+}
+
+if (quick90plus10) {
+  quick90plus10.addEventListener('click', () => {
+    addClickEffect(quick90plus10);
+    // 90+10 = 4500 (first half max) + 2700 (second half) + 600 (10 minutes extra) = 7800 seconds  
+    seekSecVal = 7800;
     render();
     closeSheet();
   });
@@ -1661,7 +1665,7 @@ function init() {
   fillSelect(elements.t1m, 59);
   fillSelect(elements.t2m, 59);
   
-  fillSelect(elements.sheetMin, 110); // Extended to 110 minutes for extra time
+  fillSelect(elements.sheetMin, 150); // Extended to 150 minutes for unlimited extra time
   fillSelect(elements.sheetSec, 59);
   
   setupTeamNameListeners();
