@@ -23,6 +23,8 @@
   /* Half colors */
   --half1: #4caf50;
   --half2: #8bc34a;
+  --et1: #ff9800;
+  --et2: #f44336;
   --bound: #ffeb3b;
   --fg: #ffffff;
   
@@ -154,7 +156,22 @@ h1 {
   background: linear-gradient(135deg, rgba(244, 67, 54, 0.4), rgba(211, 47, 47, 0.3));
 }
 
-.g2:hover {
+.get1 {
+  border-color: rgba(255, 152, 0, 0.6);
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.4), rgba(255, 193, 7, 0.3));
+}
+
+.get1:hover {
+  border-color: rgba(255, 152, 0, 0.8);
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.5), rgba(255, 193, 7, 0.4));
+}
+
+.get2 {
+  border-color: rgba(244, 67, 54, 0.6);
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.4), rgba(211, 47, 47, 0.3));
+}
+
+.get2:hover {
   border-color: rgba(244, 67, 54, 0.8);
   background: linear-gradient(135deg, rgba(244, 67, 54, 0.5), rgba(211, 47, 47, 0.4));
 }
@@ -574,6 +591,34 @@ h1 {
   font-weight: 900;
 }
 
+.card-tuner .bar-field.et1 {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.25), rgba(255, 193, 7, 0.2));
+  border-color: rgba(255, 152, 0, 0.5);
+}
+
+.card-tuner .bar-field.et1 .bar-value {
+  color: #ffffff;
+  text-shadow: 
+    0 2px 12px rgba(0, 0, 0, 0.8),
+    0 0 20px rgba(255, 152, 0, 0.6),
+    1px 1px 2px rgba(0, 0, 0, 1);
+  font-weight: 900;
+}
+
+.card-tuner .bar-field.et2 {
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.25), rgba(211, 47, 47, 0.2));
+  border-color: rgba(244, 67, 54, 0.5);
+}
+
+.card-tuner .bar-field.et2 .bar-value {
+  color: #ffffff;
+  text-shadow: 
+    0 2px 12px rgba(0, 0, 0, 0.8),
+    0 0 20px rgba(244, 67, 54, 0.6),
+    1px 1px 2px rgba(0, 0, 0, 1);
+  font-weight: 900;
+}
+
 .label {
   display: flex;
   align-items: center;
@@ -581,6 +626,29 @@ h1 {
   font-weight: 900;
   letter-spacing: 0.3px;
   font-size: clamp(16px, 4vw, 20px);
+  flex-wrap: wrap;
+}
+
+.auto-calc-info {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(33, 150, 243, 0.1);
+  border: 1px solid rgba(33, 150, 243, 0.2);
+  border-radius: 12px;
+  font-size: clamp(12px, 3vw, 14px);
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+}
+
+.extra-time-info {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid rgba(255, 152, 0, 0.2);
+  border-radius: 12px;
+  font-size: clamp(12px, 3vw, 14px);
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
 }
 
 .dot {
@@ -604,6 +672,16 @@ h1 {
 .dot.p {
   color: var(--half2);
   background: var(--half2);
+}
+
+.dot.et1 {
+  color: var(--et1);
+  background: var(--et1);
+}
+
+.dot.et2 {
+  color: var(--et2);
+  background: var(--et2);
 }
 
 /* Buttons and inputs */
@@ -753,6 +831,14 @@ button:hover, select:hover {
   color: var(--half2);
 }
 
+.tick .label.et1 {
+  color: var(--et1);
+}
+
+.tick .label.et2 {
+  color: var(--et2);
+}
+
 .tick .label.bd {
   color: var(--bound);
 }
@@ -873,6 +959,24 @@ button:hover, select:hover {
 
 .bar-field.h2 .bar-value {
   color: var(--half2);
+}
+
+.bar-field.et1 {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(255, 193, 7, 0.2));
+  border-color: rgba(255, 152, 0, 0.4);
+}
+
+.bar-field.et1 .bar-value {
+  color: var(--et1);
+}
+
+.bar-field.et2 {
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(211, 47, 47, 0.2));
+  border-color: rgba(244, 67, 54, 0.4);
+}
+
+.bar-field.et2 .bar-value {
+  color: var(--et2);
 }
 
 /* Bottom sheet */
