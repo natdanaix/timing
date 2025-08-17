@@ -159,6 +159,66 @@ h1 {
   background: linear-gradient(135deg, rgba(244, 67, 54, 0.5), rgba(211, 47, 47, 0.4));
 }
 
+/* Auto-play controls */
+.auto-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.play-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.play-btn, .live-btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: clamp(12px, 3.5vw, 14px);
+}
+
+.play-btn {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: rgba(76, 175, 80, 0.4);
+  color: #4caf50;
+}
+
+.play-btn:hover {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: rgba(76, 175, 80, 0.6);
+}
+
+.play-btn.playing {
+  background: rgba(255, 152, 0, 0.2);
+  border-color: rgba(255, 152, 0, 0.4);
+  color: #ff9800;
+}
+
+.live-btn {
+  background: rgba(244, 67, 54, 0.2);
+  border-color: rgba(244, 67, 54, 0.4);
+  color: #f44336;
+}
+
+.live-btn:hover {
+  background: rgba(244, 67, 54, 0.3);
+  border-color: rgba(244, 67, 54, 0.6);
+}
+
+.auto-status {
+  font-size: clamp(12px, 3vw, 14px);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
 /* Tuner header */
 .tuner-header {
   display: flex;
@@ -260,6 +320,7 @@ h1 {
 }
 .bookmark-marker.penalty { background: #4caf50; color: #fff; border-color: #2e7d32; }
 .bookmark-marker.goal { background: #2196f3; color: #fff; border-color: #1565c0; }
+.bookmark-marker.substitution { background: #9c27b0; color: #fff; border-color: #6a1b9a; }
 .bookmark-marker.important { background: #ff9800; color: #fff; border-color: #e65100; }
 .bookmark-marker.custom { background: #9c27b0; color: #fff; border-color: #6a1b9a; }
 
@@ -340,7 +401,28 @@ h1 {
   color: rgba(255, 255, 255, 0.5);
 }
 
+#bookmarkDropdown {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
 
+#bookmarkDropdown:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+#bookmarkDropdown option {
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  padding: 8px;
+}
 
 /* Bookmark list */
 .bookmark-list {

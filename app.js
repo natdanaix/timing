@@ -86,6 +86,7 @@ const elements = {
   bookmarkBackdrop: $('#bookmarkBackdrop'),
   bookmarkTime: $('#bookmarkTime'),
   bookmarkNote: $('#bookmarkNote'),
+  bookmarkDropdown: $('#bookmarkDropdown'),
   bookmarkSave: $('#bookmarkSave'),
   bookmarkCancel: $('#bookmarkCancel'),
   
@@ -239,131 +240,6 @@ function generateMatchStats() {
   };
 }
 
-function createExportHTML(stats) {
-  const eventsHtml = bookmarks.length > 0 ? bookmarks.map(bookmark => {
-    const eventType = EVENT_TYPES[bookmark.type];
-    if (!eventType) {
-      return '';
-    }
-    return `
-      <tr>
-        <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">
-          <span style="font-size: 18px;">${eventType.icon}</span>
-        </td>
-        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">
-          ${fmtMMSS(bookmark.time)}
-        </td>
-        <td style="padding: 8px; border: 1px solid #ddd;">
-          ${eventType.name}
-        </td>
-        <td style="padding: 8px; border: 1px solid #ddd;">
-          ${bookmark.note || '-'}
-        </td>
-      </tr>
-    `;
-  }).filter(row => row !== '').join('') : '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #666;">ไม่มีเหตุการณ์ที่บันทึกไว้</td></tr>';
-
-  const statsRows = Object.entries(stats.statsByType)
-    .filter(([_, count]) => count > 0)
-    .map(([type, count]) => {
-      const eventType = EVENT_TYPES[type];
-      if (!eventType) {
-        return '';
-      }
-      return `
-        <tr>
-          <td style="padding: 8px; border: 1px solid #ddd;">
-            ${eventType.icon} ${eventType.name}
-          </td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">
-            ${count}
-          </td>
-        </tr>
-      `;
-    }).filter(row => row !== '').join('');
-
-  return `
-    <div style="
-      font-family: 'Sarabun', 'Noto Sans Thai', sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 30px;
-      background: white;
-      color: #333;
-      line-height: 1.6;
-    ">
-      <div style="text-align: center; border-bottom: 3px solid #4caf50; padding-bottom: 20px; margin-bottom: 30px;">
-        <h1 style="color: #2e7d32; margin: 0; font-size: 32px; font-weight: bold;">
-          ⚽ สรุปการแข่งขันฟุตบอล
-        </h1>
-        <h2 style="color: #4caf50; margin: 10px 0 0 0; font-size: 24px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">
-          ${stats.matchTitle || 'ทีม A VS ทีม B'}
-        </h2>
-        <p style="margin: 5px 0 0 0; color: #666; font-size: 16px;">
-          Thai League Report
-        </p>
-      </div>
-
-      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
-        <h2 style="color: #2e7d32; margin-top: 0; font-size: 20px;">📅 ข้อมูลการแข่งขัน</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-          <div>
-            <strong>วันที่การแข่งขัน:</strong> ${stats.matchDate}<br>
-            <strong>เริ่มครึ่งแรก:</strong> ${stats.firstHalfStart}<br>
-            <strong>เริ่มครึ่งหลัง:</strong> ${stats.secondHalfStart}
-          </div>
-          <div>
-            <strong>จบการแข่งขัน:</strong> ${stats.matchEnd}<br>
-            <strong>ตำแหน่งปัจจุบัน:</strong> ${stats.currentPosition}<br>
-            <strong>เวลาที่สร้างรายงาน:</strong> ${stats.exportTime}
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-bottom: 25px;">
-        <h2 style="color: #2e7d32; font-size: 20px;">📊 สถิติสรุป</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-          <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 36px; font-weight: bold; color: #2e7d32;">
-              ${stats.totalEvents}
-            </div>
-            <div style="color: #666;">เหตุการณ์ทั้งหมด</div>
-          </div>
-          <div style="background: #fff3e0; padding: 15px; border-radius: 8px;">
-            <h3 style="margin-top: 0; color: #f57c00; font-size: 16px;">รายละเอียดเหตุการณ์</h3>
-            <table style="width: 100%; font-size: 14px;">
-              ${statsRows || '<tr><td colspan="2" style="text-align: center; color: #666;">ไม่มีข้อมูล</td></tr>'}
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-bottom: 25px;">
-        <h2 style="color: #2e7d32; font-size: 20px;">⏱️ ไทม์ไลน์เหตุการณ์</h2>
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-            <thead>
-              <tr style="background: #4caf50; color: white;">
-                <th style="padding: 12px; border: 1px solid #ddd;">ไอคอน</th>
-                <th style="padding: 12px; border: 1px solid #ddd;">เวลา</th>
-                <th style="padding: 12px; border: 1px solid #ddd;">ประเภท</th>
-                <th style="padding: 12px; border: 1px solid #ddd;">หมายเหตุ</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${eventsHtml}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div style="text-align: center; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
-        สร้างโดย Thai League Report | ${stats.exportTime}
-      </div>
-    </div>
-  `;
-}
-
 async function exportMatchToPDF() {
   let loadingEl = null;
   
@@ -405,21 +281,11 @@ async function exportMatchToPDF() {
       errorMessage += ':\n' + error.message;
     }
     
-    if (error.message && error.message.includes('EVENT_TYPES')) {
-      errorMessage = 'เกิดข้อผิดพลาดในการประมวลผลข้อมูลเหตุการณ์\nกรุณาลองใหม่อีกครั้ง';
-    }
-    
     alert(errorMessage);
   }
 }
 
 async function createMultiPagePDF(stats, loadingEl) {
-  const A4_WIDTH_MM = 210;
-  const A4_HEIGHT_MM = 297;
-  const MARGIN_MM = 15;
-  const CONTENT_WIDTH_MM = A4_WIDTH_MM - (MARGIN_MM * 2);
-  const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - (MARGIN_MM * 2);
-  
   const pdf = new jsPDF('p', 'mm', 'a4');
   let currentPage = 1;
   
@@ -949,6 +815,79 @@ function realToFieldSec(realSec) {
 
 /* === Bookmark management functions === */
 
+// Generate score options for goal events
+function generateScoreOptions() {
+  const scores = [];
+  for (let total = 0; total <= 20; total++) {
+    for (let home = 0; home <= total; home++) {
+      const away = total - home;
+      if (away <= 10 && home <= 10) {
+        scores.push(`(${home}–${away})`);
+      }
+    }
+  }
+  return scores;
+}
+
+// Generate important event options
+function generateImportantOptions() {
+  return [
+    'OFR (onfield review)',
+    'ONR (only review)'
+  ];
+}
+
+// Update bookmark dropdown based on selected event type
+function updateBookmarkDropdown(eventType) {
+  const dropdown = elements.bookmarkDropdown;
+  const noteInput = elements.bookmarkNote;
+  
+  if (eventType === 'goal') {
+    // Show dropdown with score options
+    dropdown.innerHTML = '<option value="">เลือกคะแนน</option>';
+    generateScoreOptions().forEach(score => {
+      const option = document.createElement('option');
+      option.value = score;
+      option.textContent = score;
+      dropdown.appendChild(option);
+    });
+    dropdown.style.display = 'block';
+    noteInput.placeholder = 'หมายเหตุเพิ่มเติม (ไม่บังคับ)';
+  } else if (eventType === 'important') {
+    // Show dropdown with important event options
+    dropdown.innerHTML = '<option value="">เลือกประเภท</option>';
+    generateImportantOptions().forEach(option => {
+      const optionEl = document.createElement('option');
+      optionEl.value = option;
+      optionEl.textContent = option;
+      dropdown.appendChild(optionEl);
+    });
+    dropdown.style.display = 'block';
+    noteInput.placeholder = 'หมายเหตุเพิ่มเติม (ไม่บังคับ)';
+  } else {
+    // Hide dropdown for other event types
+    dropdown.style.display = 'none';
+    noteInput.placeholder = 'หมายเหตุ (ไม่บังคับ)';
+  }
+  
+  // Reset dropdown value
+  dropdown.value = '';
+}
+
+// Get combined note from dropdown and text input
+function getCombinedNote() {
+  const dropdownValue = elements.bookmarkDropdown.value;
+  const noteValue = elements.bookmarkNote.value.trim();
+  
+  if (dropdownValue && noteValue) {
+    return `${dropdownValue} - ${noteValue}`;
+  } else if (dropdownValue) {
+    return dropdownValue;
+  } else {
+    return noteValue;
+  }
+}
+
 function saveBookmarks() {
   try {
     localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(bookmarks));
@@ -1343,8 +1282,12 @@ function closeSheet() {
 function openBookmarkSheet() {
   elements.bookmarkTime.textContent = fmtMMSS(seekSecVal);
   elements.bookmarkNote.value = '';
+  elements.bookmarkDropdown.value = '';
   const yellowRadio = document.querySelector('input[name="eventType"][value="yellow"]');
   if (yellowRadio) yellowRadio.checked = true;
+  
+  // Update dropdown for default selection (yellow)
+  updateBookmarkDropdown('yellow');
   
   elements.bookmarkSheet.classList.add('open');
   elements.bookmarkBackdrop.classList.add('open');
@@ -1433,7 +1376,7 @@ elements.bookmarkSave.addEventListener('click', () => {
   if (!selectedType) return;
   
   const eventType = selectedType.value;
-  const note = elements.bookmarkNote.value;
+  const note = getCombinedNote(); // Use combined note from dropdown and text input
   
   const existingBookmark = getBookmarkAtTime(seekSecVal);
   if (existingBookmark) {
@@ -1463,6 +1406,13 @@ elements.bookmarkSave.addEventListener('click', () => {
   `;
   document.body.appendChild(savedFeedback);
   setTimeout(() => document.body.removeChild(savedFeedback), 2000);
+});
+
+// Add event listener for event type changes
+document.addEventListener('change', (e) => {
+  if (e.target.name === 'eventType') {
+    updateBookmarkDropdown(e.target.value);
+  }
 });
 
 elements.bookmarkListBackdrop.addEventListener('click', closeBookmarkListSheet);
