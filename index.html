@@ -278,6 +278,14 @@ h1 {
   min-width: 200px;
 }
 
+.control-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
 .end-half-btn {
   padding: 12px 20px;
   border-radius: 12px;
@@ -288,8 +296,38 @@ h1 {
   font-size: clamp(14px, 4vw, 16px);
   cursor: pointer;
   transition: all 0.3s ease;
-  width: 100%;
-  max-width: 200px;
+  flex: 1;
+  max-width: 160px;
+}
+
+.reset-btn {
+  padding: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(244, 67, 54, 0.3);
+  background: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+  font-weight: 900;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 44px;
+  height: 44px;
+  display: none; /* Hidden by default */
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.reset-btn:hover {
+  background: rgba(244, 67, 54, 0.2);
+  border-color: rgba(244, 67, 54, 0.5);
+  transform: rotate(180deg) scale(1.1);
+}
+
+.reset-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .end-half-btn:hover {
@@ -1197,6 +1235,24 @@ button:hover, select:hover {
     grid-template-columns: 1fr;
   }
   
+  .half-end-controls {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .control-group {
+    min-width: 100%;
+  }
+  
+  .control-buttons {
+    max-width: 280px;
+  }
+  
+  .end-half-btn {
+    font-size: 14px;
+    padding: 10px 16px;
+  }
+  
   h1 {
     font-size: clamp(20px, 6vw, 28px);
   }
@@ -1291,11 +1347,17 @@ button:hover, select:hover {
     <!-- Half End Controls -->
     <div class="half-end-controls">
       <div class="control-group">
-        <button id="endFirstHalf" class="btn-animate end-half-btn">⏹️ จบครึ่งแรก</button>
+        <div class="control-buttons">
+          <button id="endFirstHalf" class="btn-animate end-half-btn">⏹️ จบครึ่งแรก</button>
+          <button id="resetFirstHalf" class="btn-animate reset-btn" title="รีเซ็ตเวลาจบครึ่งแรก">🔄</button>
+        </div>
         <span id="firstHalfEndTime" class="end-time-display">--:--</span>
       </div>
       <div class="control-group">
-        <button id="endSecondHalf" class="btn-animate end-half-btn">🏁 จบเกม</button>
+        <div class="control-buttons">
+          <button id="endSecondHalf" class="btn-animate end-half-btn">🏁 จบเกม</button>
+          <button id="resetSecondHalf" class="btn-animate reset-btn" title="รีเซ็ตเวลาจบเกม">🔄</button>
+        </div>
         <span id="secondHalfEndTime" class="end-time-display">--:--</span>
       </div>
     </div>
@@ -1547,6 +1609,8 @@ const elements = {
   // Half end controls
   endFirstHalf: $('#endFirstHalf'),
   endSecondHalf: $('#endSecondHalf'),
+  resetFirstHalf: $('#resetFirstHalf'),
+  resetSecondHalf: $('#resetSecondHalf'),
   firstHalfEndTime: $('#firstHalfEndTime'),
   secondHalfEndTime: $('#secondHalfEndTime'),
   
@@ -1667,7 +1731,480 @@ const EVENT_TYPES = {
 
 /* === PDF Export Functions === */
 
-// Format time for PDF display (45+extra format)
+// Load external libraries for PDF export
+async function loadPDFLibraries() {
+  if (html2canvas && jsPDF) return true;
+  
+  try {
+    const loadingEl = createLoadingIndicator('กำลังเตรียมการ export...');
+    
+    if (!html2canvas) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+      html2canvas = window.html2canvas;
+    }
+    
+    if (!jsPDF) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      jsPDF = window.jspdf.jsPDF;
+    }
+    
+    removeLoadingIndicator(loadingEl);
+    return true;
+  } catch (error) {
+    console.error('Failed to load PDF libraries:', error);
+    alert('ไม่สามารถโหลด libraries สำหรับสร้าง PDF ได้');
+    return false;
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+function createLoadingIndicator(text) {
+  const loading = document.createElement('div');
+  loading.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 12px;
+    font-weight: bold;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  `;
+  loading.innerHTML = `
+    <div style="width: 20px; height: 20px; border: 2px solid #fff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+    ${text}
+  `;
+  
+  if (!document.getElementById('spin-style')) {
+    const style = document.createElement('style');
+    style.id = 'spin-style';
+    style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+  }
+  
+  document.body.appendChild(loading);
+  return loading;
+}
+
+function removeLoadingIndicator(loadingEl) {
+  if (loadingEl && loadingEl.parentNode) {
+    loadingEl.parentNode.removeChild(loadingEl);
+  }
+}
+
+function getMatchTitle() {
+  let teamA = '';
+  let teamB = '';
+  
+  try {
+    const savedTeamA = localStorage.getItem(LS_KEYS.teamA);
+    const savedTeamB = localStorage.getItem(LS_KEYS.teamB);
+    
+    if (savedTeamA) teamA = savedTeamA.trim();
+    if (savedTeamB) teamB = savedTeamB.trim();
+  } catch (e) {
+    console.warn('Error reading from localStorage:', e);
+  }
+  
+  if (!teamA) {
+    const teamAElement = document.querySelector('#teamA');
+    if (teamAElement && teamAElement.value) {
+      teamA = teamAElement.value.trim();
+    }
+  }
+  
+  if (!teamB) {
+    const teamBElement = document.querySelector('#teamB');
+    if (teamBElement && teamBElement.value) {
+      teamB = teamBElement.value.trim();
+    }
+  }
+  
+  if (!teamA) teamA = 'ทีม A';
+  if (!teamB) teamB = 'ทีม B';
+  
+  return `${teamA} VS ${teamB}`;
+}
+
+function generateMatchStats() {
+  const now = new Date();
+  const matchDate = now.toLocaleDateString('th-TH', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: tz
+  });
+  
+  const statsByType = {};
+  Object.keys(EVENT_TYPES).forEach(key => {
+    statsByType[key] = bookmarks.filter(b => b.type === key).length;
+  });
+  
+  const firstHalfStart = secToHM(start1Sec);
+  const secondHalfStart = secToHM(start2Sec);
+  const matchTitle = getMatchTitle();
+  
+  return {
+    matchTitle,
+    matchDate,
+    firstHalfStart,
+    secondHalfStart,
+    firstHalfEnd: firstHalfEndSec ? formatTimeForPDF(firstHalfEndSec) : 'ยังไม่กำหนด',
+    secondHalfEnd: secondHalfEndSec ? formatTimeForPDF(secondHalfEndSec) : 'ยังไม่กำหนด',
+    totalEvents: bookmarks.length,
+    statsByType,
+    currentPosition: formatTimeForPDF(seekSecVal),
+    exportTime: now.toLocaleString('th-TH', { timeZone: tz })
+  };
+}
+
+async function exportMatchToPDF() {
+  let loadingEl = null;
+  
+  try {
+    if (!start1Sec || !start2Sec) {
+      alert('กรุณาตั้งเวลาเริ่มครึ่งแรกและครึ่งหลังก่อนส่งออก PDF');
+      return;
+    }
+
+    // Ensure team names are saved
+    const teamAEl = document.querySelector('#teamA');
+    const teamBEl = document.querySelector('#teamB');
+    if (teamAEl && teamAEl.value.trim()) {
+      localStorage.setItem(LS_KEYS.teamA, teamAEl.value.trim());
+    }
+    if (teamBEl && teamBEl.value.trim()) {
+      localStorage.setItem(LS_KEYS.teamB, teamBEl.value.trim());
+    }
+
+    const loaded = await loadPDFLibraries();
+    if (!loaded) return;
+
+    loadingEl = createLoadingIndicator('กำลังสร้าง PDF หลายหน้า...');
+
+    const stats = generateMatchStats();
+    await createPDFReport(stats, loadingEl);
+    
+  } catch (error) {
+    console.error('Export failed:', error);
+    
+    if (loadingEl) {
+      removeLoadingIndicator(loadingEl);
+    }
+    
+    let errorMessage = 'เกิดข้อผิดพลาดในการส่งออก PDF';
+    if (error.message) {
+      errorMessage += ':\n' + error.message;
+    }
+    alert(errorMessage);
+  }
+}
+
+async function createPDFReport(stats, loadingEl) {
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  let currentPage = 1;
+  
+  updateLoadingMessage(loadingEl, 'กำลังสร้างหน้าที่ 1...');
+  
+  // Create summary page
+  await addSummaryPageToPDF(pdf, stats);
+  
+  // Create events pages if there are bookmarks
+  if (bookmarks.length > 0) {
+    const eventsPerPage = 15;
+    const totalPages = Math.ceil(bookmarks.length / eventsPerPage);
+    
+    for (let page = 0; page < totalPages; page++) {
+      currentPage++;
+      updateLoadingMessage(loadingEl, `กำลังสร้างหน้าที่ ${currentPage}...`);
+      
+      const startIndex = page * eventsPerPage;
+      const endIndex = Math.min(startIndex + eventsPerPage, bookmarks.length);
+      const pageBookmarks = bookmarks.slice(startIndex, endIndex);
+      
+      pdf.addPage();
+      await addEventsPageToPDF(pdf, pageBookmarks, page + 1, totalPages, stats);
+    }
+  }
+  
+  updateLoadingMessage(loadingEl, 'กำลังบันทึกไฟล์...');
+  
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('th-TH').replace(/\//g, '-');
+  const timeStr = now.toLocaleTimeString('th-TH', { hour12: false }).replace(/:/g, '-');
+  const filename = `Football-Match-Report-${dateStr}-${timeStr}.pdf`;
+  
+  pdf.save(filename);
+  
+  removeLoadingIndicator(loadingEl);
+  
+  showSuccessMessage(`✅ ส่งออก PDF สำเร็จ! (${currentPage} หน้า)`);
+}
+
+async function addSummaryPageToPDF(pdf, stats) {
+  const htmlContent = createSummaryHTML(stats);
+  await addHTMLPageToPDF(pdf, htmlContent);
+}
+
+async function addEventsPageToPDF(pdf, pageBookmarks, pageNumber, totalPages, stats) {
+  const htmlContent = createEventsHTML(pageBookmarks, pageNumber, totalPages, stats);
+  await addHTMLPageToPDF(pdf, htmlContent);
+}
+
+async function addHTMLPageToPDF(pdf, htmlContent) {
+  const container = document.createElement('div');
+  container.style.cssText = `
+    position: absolute;
+    top: -10000px;
+    left: -10000px;
+    width: 210mm;
+    height: 297mm;
+    background: white;
+    padding: 15mm;
+    box-sizing: border-box;
+    font-family: 'Sarabun', 'Noto Sans Thai', 'Kanit', sans-serif;
+  `;
+  
+  container.innerHTML = htmlContent;
+  
+  // Add Google Fonts for Thai support
+  const fontLink = document.createElement('link');
+  fontLink.href = 'https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&family=Noto+Sans+Thai:wght@300;400;700&family=Kanit:wght@300;400;700&display=swap';
+  fontLink.rel = 'stylesheet';
+  document.head.appendChild(fontLink);
+  
+  document.body.appendChild(container);
+  
+  // Wait for fonts to load
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  try {
+    const canvas = await html2canvas(container, {
+      width: 794,  // A4 width in pixels at 96 DPI
+      height: 1123, // A4 height in pixels at 96 DPI
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      fontEmbedded: true
+    });
+    
+    if (canvas) {
+      const imgWidth = 210;
+      const imgHeight = 297;
+      
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
+    }
+  } finally {
+    document.body.removeChild(container);
+  }
+}
+
+function createSummaryHTML(stats) {
+  const statsRows = Object.entries(stats.statsByType)
+    .filter(([_, count]) => count > 0)
+    .map(([type, count]) => {
+      const eventType = EVENT_TYPES[type];
+      if (!eventType) return '';
+      return `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd; font-size: 14px;">
+            ${eventType.icon} ${eventType.name}
+          </td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold; font-size: 14px;">
+            ${count}
+          </td>
+        </tr>
+      `;
+    }).filter(row => row !== '').join('');
+
+  return `
+    <div style="
+      font-family: 'Sarabun', 'Noto Sans Thai', 'Kanit', sans-serif;
+      color: #333;
+      line-height: 1.6;
+      height: 267mm;
+      overflow: hidden;
+      padding: 10mm;
+    ">
+      <div style="text-align: center; border-bottom: 3px solid #4caf50; padding-bottom: 20px; margin-bottom: 30px;">
+        <h1 style="color: #2e7d32; margin: 0; font-size: 32px; font-weight: bold;">
+          ⚽ สรุปการแข่งขันฟุตบอล
+        </h1>
+        <h2 style="color: #4caf50; margin: 10px 0 0 0; font-size: 24px; font-weight: bold;">
+          ${stats.matchTitle}
+        </h2>
+        <p style="margin: 10px 0 0 0; color: #666; font-size: 16px;">
+          Thai League Report
+        </p>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+        <h2 style="color: #2e7d32; margin-top: 0; font-size: 20px;">📅 ข้อมูลการแข่งขัน</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div style="font-size: 14px; line-height: 1.8;">
+            <strong>วันที่การแข่งขัน:</strong> ${stats.matchDate}<br>
+            <strong>เริ่มครึ่งแรก:</strong> ${stats.firstHalfStart}<br>
+            <strong>เริ่มครึ่งหลัง:</strong> ${stats.secondHalfStart}<br>
+            <strong>จบครึ่งแรก:</strong> ${stats.firstHalfEnd}
+          </div>
+          <div style="font-size: 14px; line-height: 1.8;">
+            <strong>จบเกม:</strong> ${stats.secondHalfEnd}<br>
+            <strong>ตำแหน่งปัจจุบัน:</strong> ${stats.currentPosition}<br>
+            <strong>เวลาที่สร้างรายงาน:</strong> ${stats.exportTime}
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 25px;">
+        <h2 style="color: #2e7d32; font-size: 20px;">📊 สถิติสรุป</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 36px; font-weight: bold; color: #2e7d32;">
+              ${stats.totalEvents}
+            </div>
+            <div style="color: #666; font-size: 16px;">เหตุการณ์ทั้งหมด</div>
+          </div>
+          <div style="background: #fff3e0; padding: 15px; border-radius: 8px;">
+            <h3 style="margin-top: 0; color: #f57c00; font-size: 16px;">รายละเอียดเหตุการณ์</h3>
+            <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+              ${statsRows || '<tr><td colspan="2" style="text-align: center; color: #666; padding: 10px;">ไม่มีข้อมูล</td></tr>'}
+            </table>
+          </div>
+        </div>
+      </div>
+
+      ${bookmarks.length > 0 ? `
+      <div style="margin-bottom: 20px;">
+        <h2 style="color: #2e7d32; font-size: 20px;">⏱️ ไทม์ไลน์เหตุการณ์</h2>
+        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+          แสดงเหตุการณ์ทั้งหมด ${bookmarks.length} รายการ (ต่อในหน้าถัดไป)
+        </p>
+        <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #2196f3;">
+          <p style="margin: 0; color: #1565c0; font-weight: bold; font-size: 14px;">
+            📋 รายละเอียดเหตุการณ์แยกตามหน้า ${Math.ceil(bookmarks.length / 15)} หน้า
+          </p>
+        </div>
+      </div>
+      ` : ''}
+
+      <div style="position: absolute; bottom: 10mm; left: 0; right: 0; text-align: center; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
+        สร้างโดย Football Time Tuner | หน้า 1
+      </div>
+    </div>
+  `;
+}
+
+function createEventsHTML(pageBookmarks, pageNumber, totalPages, stats) {
+  const eventsHtml = pageBookmarks.map(bookmark => {
+    const eventType = EVENT_TYPES[bookmark.type];
+    if (!eventType) return '';
+    
+    return `
+      <tr style="border-bottom: 1px solid #eee;">
+        <td style="text-align: center; padding: 12px 8px; border-right: 1px solid #ddd; width: 60px;">
+          <span style="font-size: 20px;">${eventType.icon}</span>
+        </td>
+        <td style="padding: 12px 8px; border-right: 1px solid #ddd; font-weight: bold; width: 80px; font-size: 16px;">
+          ${formatTimeForPDF(bookmark.time)}
+        </td>
+        <td style="padding: 12px 8px; border-right: 1px solid #ddd; width: 120px; font-size: 14px;">
+          ${eventType.name}
+        </td>
+        <td style="padding: 12px 8px; font-size: 14px; word-break: break-word;">
+          ${bookmark.note || '-'}
+        </td>
+      </tr>
+    `;
+  }).filter(row => row !== '').join('');
+
+  return `
+    <div style="
+      font-family: 'Sarabun', 'Noto Sans Thai', 'Kanit', sans-serif;
+      color: #333;
+      line-height: 1.6;
+      height: 267mm;
+      overflow: hidden;
+      padding: 10mm;
+    ">
+      <div style="border-bottom: 2px solid #4caf50; padding-bottom: 15px; margin-bottom: 20px;">
+        <h1 style="color: #2e7d32; margin: 0; font-size: 24px; font-weight: bold;">
+          ⏱️ ไทม์ไลน์เหตุการณ์ (หน้า ${pageNumber}/${totalPages})
+        </h1>
+        <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">
+          แสดงเหตุการณ์ ${(pageNumber-1)*15 + 1} - ${Math.min(pageNumber*15, bookmarks.length)} จากทั้งหมด ${bookmarks.length} รายการ
+        </p>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px; background: white; border: 1px solid #ddd;">
+          <thead>
+            <tr style="background: #4caf50; color: white;">
+              <th style="padding: 15px 8px; text-align: center; font-size: 16px; font-weight: bold;">ไอคอน</th>
+              <th style="padding: 15px 8px; text-align: center; font-size: 16px; font-weight: bold;">เวลา</th>
+              <th style="padding: 15px 8px; text-align: center; font-size: 16px; font-weight: bold;">ประเภท</th>
+              <th style="padding: 15px 8px; text-align: center; font-size: 16px; font-weight: bold;">หมายเหตุ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${eventsHtml}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="position: absolute; bottom: 10mm; left: 0; right: 0; text-align: center; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
+        สร้างโดย Football Time Tuner | หน้า ${pageNumber + 1} | ${stats.exportTime}
+      </div>
+    </div>
+  `;
+}
+
+function updateLoadingMessage(loadingEl, message) {
+  if (loadingEl) {
+    const textNode = loadingEl.childNodes[1];
+    if (textNode) {
+      textNode.textContent = message;
+    }
+  }
+}
+
+function showSuccessMessage(message) {
+  const successEl = document.createElement('div');
+  successEl.textContent = message;
+  successEl.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(76, 175, 80, 0.9);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    z-index: 1000;
+    animation: fadeInOut 3s ease-in-out;
+  `;
+  document.body.appendChild(successEl);
+  setTimeout(() => {
+    if (document.body.contains(successEl)) {
+      document.body.removeChild(successEl);
+    }
+  }, 3000);
+}
 function formatTimeForPDF(timeInSeconds) {
   const FIRST_HALF_MAX = getFirstHalfMaxSec();
   
@@ -1878,11 +2415,13 @@ function updateHalfEndDisplay() {
     elements.firstHalfEndTime.classList.add('set');
     elements.endFirstHalf.classList.add('completed');
     elements.endFirstHalf.textContent = '✅ ครึ่งแรกจบแล้ว';
+    elements.resetFirstHalf.style.display = 'flex';
   } else {
     elements.firstHalfEndTime.textContent = '--:--';
     elements.firstHalfEndTime.classList.remove('set');
     elements.endFirstHalf.classList.remove('completed');
     elements.endFirstHalf.textContent = '⏹️ จบครึ่งแรก';
+    elements.resetFirstHalf.style.display = 'none';
   }
   
   // Update second half end display
@@ -1891,11 +2430,99 @@ function updateHalfEndDisplay() {
     elements.secondHalfEndTime.classList.add('set');
     elements.endSecondHalf.classList.add('completed');
     elements.endSecondHalf.textContent = '🏆 เกมจบแล้ว';
+    elements.resetSecondHalf.style.display = 'flex';
   } else {
     elements.secondHalfEndTime.textContent = '--:--';
     elements.secondHalfEndTime.classList.remove('set');
     elements.endSecondHalf.classList.remove('completed');
     elements.endSecondHalf.textContent = '🏁 จบเกม';
+    elements.resetSecondHalf.style.display = 'none';
+  }
+}
+
+function resetFirstHalf() {
+  if (confirm('ต้องการรีเซ็ตเวลาจบครึ่งแรกหรือไม่?')) {
+    firstHalfEndSec = null;
+    
+    // Remove from localStorage
+    try {
+      localStorage.removeItem(LS_KEYS.firstHalfEnd);
+    } catch (e) {
+      console.warn('Could not remove first half end time:', e);
+    }
+    
+    updateHalfEndDisplay();
+    
+    // Show feedback
+    const feedback = document.createElement('div');
+    feedback.textContent = '🔄 รีเซ็ตเวลาจบครึ่งแรกแล้ว';
+    feedback.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(33, 150, 243, 0.9);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      z-index: 1000;
+      animation: fadeInOut 2s ease-in-out;
+    `;
+    document.body.appendChild(feedback);
+    setTimeout(() => {
+      if (document.body.contains(feedback)) {
+        document.body.removeChild(feedback);
+      }
+    }, 2000);
+    
+    // Rebuild ticks and bookmarks
+    buildTicks();
+    renderBookmarks();
+    render();
+  }
+}
+
+function resetSecondHalf() {
+  if (confirm('ต้องการรีเซ็ตเวลาจบเกมหรือไม่?')) {
+    secondHalfEndSec = null;
+    
+    // Remove from localStorage
+    try {
+      localStorage.removeItem(LS_KEYS.secondHalfEnd);
+    } catch (e) {
+      console.warn('Could not remove second half end time:', e);
+    }
+    
+    updateHalfEndDisplay();
+    
+    // Show feedback
+    const feedback = document.createElement('div');
+    feedback.textContent = '🔄 รีเซ็ตเวลาจบเกมแล้ว';
+    feedback.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(33, 150, 243, 0.9);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      z-index: 1000;
+      animation: fadeInOut 2s ease-in-out;
+    `;
+    document.body.appendChild(feedback);
+    setTimeout(() => {
+      if (document.body.contains(feedback)) {
+        document.body.removeChild(feedback);
+      }
+    }, 2000);
+    
+    // Rebuild ticks and bookmarks
+    buildTicks();
+    renderBookmarks();
+    render();
   }
 }
 
@@ -2833,6 +3460,13 @@ elements.clearAllBookmarks.addEventListener('click', () => {
   setTimeout(clearAllBookmarks, 100);
 });
 
+if (elements.exportBtn) {
+  elements.exportBtn.addEventListener('click', () => {
+    addClickEffect(elements.exportBtn);
+    setTimeout(exportMatchToPDF, 100);
+  });
+}
+
 /* === Start time controls === */
 
 function syncStarts() {
@@ -2876,6 +3510,16 @@ elements.endSecondHalf.addEventListener('click', () => {
   if (secondHalfEndSec === null) {
     endSecondHalf();
   }
+});
+
+elements.resetFirstHalf.addEventListener('click', () => {
+  addClickEffect(elements.resetFirstHalf);
+  resetFirstHalf();
+});
+
+elements.resetSecondHalf.addEventListener('click', () => {
+  addClickEffect(elements.resetSecondHalf);
+  resetSecondHalf();
 });
 
 /* === Initialization === */
