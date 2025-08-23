@@ -175,12 +175,17 @@ const EVENT_TYPES = {
     class: 'red',
     teamOptions: true
   },
-  penalty: { icon: '🔴', name: 'จุดโทษ', class: 'penalty' },
+  penalty: { 
+    icon: '🔴', 
+    name: 'จุดโทษ', 
+    class: 'penalty',
+    teamOptions: true
+  },
   goal: { 
     icon: '⚽', 
     name: 'ประตู', 
     class: 'goal',
-    scoreOptions: true
+    teamOptions: true
   },
   substitution: { 
     icon: '🔄', 
