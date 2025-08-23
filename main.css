@@ -20,9 +20,15 @@
   --card-tuner-bg: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 193, 7, 0.1));
   --card-tuner-border: rgba(255, 152, 0, 0.3);
   
-  /* Half colors */
-  --half1: #4caf50;
-  --half2: #8bc34a;
+  /* Team colors (dynamically updated) */
+  --team-a-color: #4caf50;
+  --team-b-color: #8bc34a;
+  --team-a-light: rgba(76, 175, 80, 0.2);
+  --team-b-light: rgba(139, 195, 74, 0.2);
+  
+  /* Half colors - now use team colors */
+  --half1: var(--team-a-color);
+  --half2: var(--team-b-color);
   --et1: #ff9800;
   --et2: #f44336;
   --bound: #ffeb3b;
@@ -115,15 +121,15 @@ h1 {
   box-shadow: 0 8px 32px rgba(255, 152, 0, 0.3), 0 12px 40px rgba(255, 152, 0, 0.2);
 }
 
-/* Team inputs styles */
+/* Team inputs styles with dynamic colors */
 .card-teams {
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(56, 142, 60, 0.1));
-  border-color: rgba(76, 175, 80, 0.3);
-  box-shadow: 0 8px 32px rgba(76, 175, 80, 0.2);
+  background: linear-gradient(135deg, var(--team-a-light), var(--team-b-light));
+  border-color: var(--team-a-color);
+  box-shadow: 0 8px 32px var(--team-a-light);
 }
 
 .card-teams:hover {
-  box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3), 0 12px 40px rgba(76, 175, 80, 0.2);
+  box-shadow: 0 8px 32px var(--team-a-color), 0 12px 40px var(--team-a-light);
 }
 
 .team-inputs {
@@ -144,17 +150,21 @@ h1 {
 
 .team-input-group label {
   font-weight: 900;
-  color: #2e7d32;
+  color: var(--team-a-color);
   font-size: clamp(14px, 4vw, 16px);
   letter-spacing: 0.3px;
 }
 
-.team-input-group input {
+.team-input-group:last-child label {
+  color: var(--team-b-color);
+}
+
+.team-input-group input[type="text"] {
   padding: 12px 16px;
-  border: 2px solid rgba(76, 175, 80, 0.3);
+  border: 2px solid var(--team-a-color);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.9);
-  color: #2e7d32;
+  color: var(--team-a-color);
   font-size: clamp(14px, 4vw, 16px);
   font-weight: 700;
   text-align: center;
@@ -162,17 +172,115 @@ h1 {
   backdrop-filter: blur(5px);
 }
 
-.team-input-group input:focus {
+.team-input-group:last-child input[type="text"] {
+  border-color: var(--team-b-color);
+  color: var(--team-b-color);
+}
+
+.team-input-group input[type="text"]:focus {
   outline: none;
-  border-color: #4caf50;
+  border-color: var(--team-a-color);
   background: rgba(255, 255, 255, 1);
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+  box-shadow: 0 0 0 3px var(--team-a-light);
   transform: translateY(-1px);
 }
 
-.team-input-group input::placeholder {
+.team-input-group:last-child input[type="text"]:focus {
+  border-color: var(--team-b-color);
+  box-shadow: 0 0 0 3px var(--team-b-light);
+}
+
+.team-input-group input[type="text"]::placeholder {
   color: rgba(46, 125, 50, 0.6);
   font-weight: 500;
+}
+
+.team-input-group:last-child input[type="text"]::placeholder {
+  color: rgba(139, 195, 74, 0.6);
+}
+
+/* Color selector styles */
+.color-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.color-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(46, 125, 50, 0.8);
+  min-width: 40px;
+}
+
+.color-input {
+  width: 40px;
+  height: 30px;
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: none;
+}
+
+.color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 6px;
+}
+
+.color-input:hover {
+  border-color: #4caf50;
+  transform: scale(1.05);
+}
+
+.color-presets {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.color-preset {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #ccc;
+  position: relative;
+}
+
+.color-preset:hover {
+  transform: scale(1.2);
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.color-preset.selected {
+  border-color: white;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
+  transform: scale(1.1);
+}
+
+.color-preset.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .vs-divider {
@@ -181,7 +289,7 @@ h1 {
   justify-content: center;
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #ff9800, #ffc107);
+  background: linear-gradient(135deg, var(--team-a-color), var(--team-b-color));
   border-radius: 50%;
   font-weight: 900;
   font-size: 18px;
@@ -190,6 +298,7 @@ h1 {
   box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
   animation: vsGlow 3s ease-in-out infinite;
   flex-shrink: 0;
+  transition: all 0.3s ease;
 }
 
 @keyframes vsGlow {
@@ -761,6 +870,27 @@ h1 {
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
 }
 
+.bookmark-marker.team-colored {
+  border-width: 3px;
+  animation: teamBookmarkPulse 2s ease-in-out infinite;
+}
+
+.bookmark-marker.team-colored:hover {
+  transform: scale(1.3);
+  filter: brightness(1.2);
+}
+
+@keyframes teamBookmarkPulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.05);
+    filter: brightness(1.1);
+  }
+}
+
 @keyframes bookmarkPulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
   50% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
@@ -880,6 +1010,7 @@ h1 {
   color: #fff;
   font-size: 14px;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 #bookmarkDropdown:focus {
@@ -892,6 +1023,24 @@ h1 {
   background: rgba(0, 0, 0, 0.9);
   color: #fff;
   padding: 8px;
+  font-weight: normal;
+}
+
+#bookmarkDropdown option[data-team-color] {
+  background: rgba(0, 0, 0, 0.9);
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Enhanced dropdown styling for team colors */
+#bookmarkDropdown.team-colored {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(0, 0, 0, 0.3));
+  border-color: rgba(76, 175, 80, 0.4);
+}
+
+/* Smooth color transitions for dropdown */
+#bookmarkDropdown {
+  transition: all 0.3s ease, color 0.2s ease, background 0.3s ease, border-color 0.3s ease;
 }
 
 /* Bookmark list */
@@ -929,6 +1078,27 @@ h1 {
   font-size: 20px;
 }
 
+.team-color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  animation: teamColorPulse 2s ease-in-out infinite;
+}
+
+@keyframes teamColorPulse {
+  0%, 100% { 
+    transform: scale(1); 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); 
+  }
+  50% { 
+    transform: scale(1.1); 
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 255, 255, 0.3); 
+  }
+}
+
 .bookmark-details {
   flex: 1;
 }
@@ -943,6 +1113,12 @@ h1 {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
   margin-top: 2px;
+  transition: color 0.3s ease;
+}
+
+.bookmark-note[style*="color"] {
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  font-weight: 600;
 }
 
 .bookmark-actions {
@@ -1322,6 +1498,20 @@ button:hover, select:hover {
   h1 {
     font-size: clamp(20px, 6vw, 28px);
   }
+  
+  .color-selector {
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  
+  .color-presets {
+    gap: 3px;
+  }
+  
+  .color-preset {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1348,6 +1538,16 @@ button:hover, select:hover {
   .zoom-btn, .zoom-level {
     flex: 1;
     max-width: 80px;
+  }
+  
+  .color-selector {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .color-presets {
+    justify-content: flex-start;
   }
 }
 

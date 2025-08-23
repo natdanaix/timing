@@ -38,6 +38,8 @@ const LS_KEYS = {
   seekPos: 'ftt_seek_position',
   teamA: 'ftt_team_a',
   teamB: 'ftt_team_b',
+  colorA: 'ftt_color_a',
+  colorB: 'ftt_color_b',
   firstHalfEnd: 'ftt_first_half_end',
   secondHalfEnd: 'ftt_second_half_end'
 };
@@ -47,6 +49,8 @@ const elements = {
   // Team inputs
   teamA: $('#teamA'),
   teamB: $('#teamB'),
+  colorA: $('#colorA'),
+  colorB: $('#colorB'),
   
   // Time inputs
   t1h: $('#t1h'),
@@ -738,63 +742,331 @@ function updateBookmarkDropdown(eventType) {
   const noteInput = elements.bookmarkNote;
   const eventConfig = EVENT_TYPES[eventType];
   
+  // Remove existing event listeners to prevent duplicates
+  const newDropdown = dropdown.cloneNode(false);
+  dropdown.parentNode.replaceChild(newDropdown, dropdown);
+  elements.bookmarkDropdown = newDropdown;
+  
   if (eventConfig.teamOptions) {
-    // Show dropdown with actual team names
+    // Show dropdown with actual team names and colors
     const { teamA, teamB } = getTeamNames();
+    const { colorA, colorB } = getTeamColors();
     
-    dropdown.innerHTML = '<option value="">เลือกทีม</option>';
-    [teamA, teamB].forEach(teamName => {
-      const option = document.createElement('option');
-      option.value = teamName;
-      option.textContent = teamName;
-      dropdown.appendChild(option);
-    });
-    dropdown.style.display = 'block';
+    newDropdown.innerHTML = '<option value="">เลือกทีม</option>';
+    
+    // Add Team A option with color
+    const optionA = document.createElement('option');
+    optionA.value = teamA;
+    optionA.textContent = `🏠 ${teamA}`;
+    optionA.style.color = colorA;
+    optionA.style.fontWeight = 'bold';
+    optionA.dataset.teamColor = colorA;
+    newDropdown.appendChild(optionA);
+    
+    // Add Team B option with color
+    const optionB = document.createElement('option');
+    optionB.value = teamB;
+    optionB.textContent = `🚌 ${teamB}`;
+    optionB.style.color = colorB;
+    optionB.style.fontWeight = 'bold';
+    optionB.dataset.teamColor = colorB;
+    newDropdown.appendChild(optionB);
+    
+    newDropdown.style.display = 'block';
     noteInput.placeholder = 'หมายเหตุเพิ่มเติม (ไม่บังคับ)';
+    
+    // Update dropdown style when selection changes
+    newDropdown.addEventListener('change', function() {
+      const selectedOption = this.options[this.selectedIndex];
+      if (selectedOption.dataset.teamColor) {
+        this.style.color = selectedOption.dataset.teamColor;
+        this.style.fontWeight = 'bold';
+        this.style.background = `linear-gradient(135deg, ${selectedOption.dataset.teamColor}20, ${selectedOption.dataset.teamColor}10)`;
+        this.style.borderColor = `${selectedOption.dataset.teamColor}60`;
+      } else {
+        this.style.color = '#fff';
+        this.style.fontWeight = 'normal';
+        this.style.background = 'rgba(0, 0, 0, 0.3)';
+        this.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+      }
+    });
+    
   } else if (eventConfig.scoreOptions) {
     // Show dropdown with score options
-    dropdown.innerHTML = '<option value="">เลือกสกอร์</option>';
+    newDropdown.innerHTML = '<option value="">เลือกสกอร์</option>';
     generateScoreOptions().forEach(score => {
       const option = document.createElement('option');
       option.value = score;
       option.textContent = score;
-      dropdown.appendChild(option);
+      newDropdown.appendChild(option);
     });
-    dropdown.style.display = 'block';
+    newDropdown.style.display = 'block';
     noteInput.placeholder = 'หมายเหตุเพิ่มเติม (ไม่บังคับ)';
   } else if (eventConfig.importantOptions) {
     // Show dropdown with important event options
-    dropdown.innerHTML = '<option value="">เลือกประเภท</option>';
+    newDropdown.innerHTML = '<option value="">เลือกประเภท</option>';
     generateImportantOptions().forEach(option => {
       const optionEl = document.createElement('option');
       optionEl.value = option;
       optionEl.textContent = option;
-      dropdown.appendChild(optionEl);
+      newDropdown.appendChild(optionEl);
     });
-    dropdown.style.display = 'block';
+    newDropdown.style.display = 'block';
     noteInput.placeholder = 'หมายเหตุเพิ่มเติม (ไม่บังคับ)';
   } else {
     // Hide dropdown for other event types
-    dropdown.style.display = 'none';
+    newDropdown.style.display = 'none';
     noteInput.placeholder = 'หมายเหตุ (ไม่บังคับ)';
   }
   
-  // Reset dropdown value
-  dropdown.value = '';
+  // Reset dropdown value and style
+  newDropdown.value = '';
+  newDropdown.style.color = '#fff';
+  newDropdown.style.fontWeight = 'normal';
+  newDropdown.style.background = 'rgba(0, 0, 0, 0.3)';
+  newDropdown.style.borderColor = 'rgba(255, 255, 255, 0.2)';
 }
 
-// Get combined note from dropdown and text input
+// Get combined note from dropdown and text input with team color indicator
 function getCombinedNote() {
-  const dropdownValue = elements.bookmarkDropdown.value;
+  const dropdown = elements.bookmarkDropdown || document.querySelector('#bookmarkDropdown');
+  const dropdownValue = dropdown.value;
   const noteValue = elements.bookmarkNote.value.trim();
   
+  // Get selected option to check for team color
+  const selectedOption = dropdown.options[dropdown.selectedIndex];
+  const teamColor = selectedOption?.dataset?.teamColor;
+  
+  let combinedNote = '';
+  
   if (dropdownValue && noteValue) {
-    return `${dropdownValue} - ${noteValue}`;
+    combinedNote = `${dropdownValue} - ${noteValue}`;
   } else if (dropdownValue) {
-    return dropdownValue;
+    combinedNote = dropdownValue;
   } else {
-    return noteValue;
+    combinedNote = noteValue;
   }
+  
+  // Add color metadata if team is selected
+  if (teamColor && dropdownValue) {
+    combinedNote = {
+      text: combinedNote,
+      teamColor: teamColor,
+      teamName: dropdownValue
+    };
+  }
+  
+  return combinedNote;
+}
+
+/* === Team Color Management Functions === */
+
+// Default team colors
+const DEFAULT_COLORS = {
+  teamA: '#4caf50',
+  teamB: '#8bc34a'
+};
+
+// Get current team colors from inputs or localStorage
+function getTeamColors() {
+  let colorA = DEFAULT_COLORS.teamA;
+  let colorB = DEFAULT_COLORS.teamB;
+  
+  // Try to get from DOM first
+  const colorAEl = document.querySelector('#colorA');
+  const colorBEl = document.querySelector('#colorB');
+  
+  if (colorAEl && colorAEl.value) {
+    colorA = colorAEl.value;
+  }
+  if (colorBEl && colorBEl.value) {
+    colorB = colorBEl.value;
+  }
+  
+  // If not in DOM, try localStorage
+  try {
+    const savedColorA = localStorage.getItem(LS_KEYS.colorA);
+    const savedColorB = localStorage.getItem(LS_KEYS.colorB);
+    
+    if (savedColorA && !colorAEl?.value) colorA = savedColorA;
+    if (savedColorB && !colorBEl?.value) colorB = savedColorB;
+  } catch (e) {
+    console.warn('Error reading colors from localStorage:', e);
+  }
+  
+  return { colorA, colorB };
+}
+
+// Save team colors to localStorage
+function saveTeamColors() {
+  try {
+    const colorAEl = document.querySelector('#colorA');
+    const colorBEl = document.querySelector('#colorB');
+    
+    if (colorAEl) {
+      localStorage.setItem(LS_KEYS.colorA, colorAEl.value);
+    }
+    
+    if (colorBEl) {
+      localStorage.setItem(LS_KEYS.colorB, colorBEl.value);
+    }
+  } catch (e) {
+    console.warn('Could not save team colors:', e);
+  }
+}
+
+// Load team colors from localStorage
+function loadTeamColors() {
+  try {
+    const colorA = localStorage.getItem(LS_KEYS.colorA);
+    const colorB = localStorage.getItem(LS_KEYS.colorB);
+    
+    const colorAEl = document.querySelector('#colorA');
+    const colorBEl = document.querySelector('#colorB');
+    
+    if (colorA && colorAEl) {
+      colorAEl.value = colorA;
+    }
+    
+    if (colorB && colorBEl) {
+      colorBEl.value = colorB;
+    }
+    
+    const hasColors = colorA && colorB;
+    return hasColors;
+  } catch (e) {
+    console.warn('Could not load team colors:', e);
+    return false;
+  }
+}
+
+// Update CSS custom properties with team colors
+function updateTeamColorsInCSS() {
+  const colors = getTeamColors();
+  
+  // Update CSS custom properties
+  document.documentElement.style.setProperty('--team-a-color', colors.colorA);
+  document.documentElement.style.setProperty('--team-b-color', colors.colorB);
+  
+  // Update half colors to use team colors
+  document.documentElement.style.setProperty('--half1', colors.colorA);
+  document.documentElement.style.setProperty('--half2', colors.colorB);
+  
+  // Create lighter versions for backgrounds
+  const colorALight = hexToRgba(colors.colorA, 0.2);
+  const colorBLight = hexToRgba(colors.colorB, 0.2);
+  
+  document.documentElement.style.setProperty('--team-a-light', colorALight);
+  document.documentElement.style.setProperty('--team-b-light', colorBLight);
+  
+  // Update VS divider gradient with team colors
+  const vsDiv = document.querySelector('.vs-divider');
+  if (vsDiv) {
+    vsDiv.style.background = `linear-gradient(135deg, ${colors.colorA}, ${colors.colorB})`;
+  }
+}
+
+// Convert hex color to rgba with opacity
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Handle color preset button clicks
+function handleColorPreset(presetButton, colorInput) {
+  const color = presetButton.dataset.color;
+  colorInput.value = color;
+  
+  // Update selected state
+  const presets = presetButton.parentElement.querySelectorAll('.color-preset');
+  presets.forEach(p => p.classList.remove('selected'));
+  presetButton.classList.add('selected');
+  
+  // Trigger change event
+  colorInput.dispatchEvent(new Event('change'));
+}
+
+// Update preset button selection based on current color
+function updatePresetSelection(colorInput) {
+  const currentColor = colorInput.value.toLowerCase();
+  const presets = colorInput.parentElement.querySelectorAll('.color-preset');
+  
+  presets.forEach(preset => {
+    const presetColor = preset.dataset.color.toLowerCase();
+    if (presetColor === currentColor) {
+      preset.classList.add('selected');
+    } else {
+      preset.classList.remove('selected');
+    }
+  });
+}
+
+// Setup color input event listeners
+function setupColorListeners() {
+  const colorAEl = document.querySelector('#colorA');
+  const colorBEl = document.querySelector('#colorB');
+  
+  // Color input change handlers
+  [colorAEl, colorBEl].forEach(colorEl => {
+    if (colorEl) {
+      colorEl.addEventListener('change', () => {
+        saveTeamColors();
+        updateTeamColorsInCSS();
+        updatePresetSelection(colorEl);
+        
+        // Show color change feedback
+        const colors = getTeamColors();
+        const teamName = colorEl.id === 'colorA' ? 'ทีมเจ้าบ้าน' : 'ทีมเยือน';
+        showColorChangeFeedback(teamName, colorEl.value);
+      });
+      
+      colorEl.addEventListener('input', () => {
+        updateTeamColorsInCSS();
+      });
+    }
+  });
+  
+  // Color preset button handlers
+  document.querySelectorAll('.color-preset').forEach(preset => {
+    preset.addEventListener('click', () => {
+      const colorSelector = preset.closest('.color-selector');
+      const colorInput = colorSelector.querySelector('.color-input');
+      handleColorPreset(preset, colorInput);
+    });
+  });
+}
+
+// Show feedback when color changes
+function showColorChangeFeedback(teamName, color) {
+  const feedback = document.createElement('div');
+  feedback.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="width: 20px; height: 20px; background: ${color}; border-radius: 50%; border: 2px solid white;"></div>
+      <span>🎨 เปลี่ยนสี${teamName}แล้ว</span>
+    </div>
+  `;
+  feedback.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(76, 175, 80, 0.9);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    z-index: 1000;
+    animation: fadeInOut 2s ease-in-out;
+    font-size: 14px;
+  `;
+  document.body.appendChild(feedback);
+  setTimeout(() => {
+    if (document.body.contains(feedback)) {
+      document.body.removeChild(feedback);
+    }
+  }, 2000);
 }
 
 /* === Time calculation functions === */
@@ -1258,11 +1530,26 @@ function loadBookmarks() {
 }
 
 function addBookmark(timeInSeconds, eventType, note = '') {
+  // Handle note object with team color
+  let noteText = '';
+  let teamColor = null;
+  let teamName = null;
+  
+  if (typeof note === 'object' && note.text) {
+    noteText = note.text;
+    teamColor = note.teamColor;
+    teamName = note.teamName;
+  } else {
+    noteText = typeof note === 'string' ? note.trim() : '';
+  }
+  
   const bookmark = {
     id: Date.now(),
     time: timeInSeconds,
     type: eventType,
-    note: note.trim(),
+    note: noteText,
+    teamColor: teamColor,
+    teamName: teamName,
     created: new Date().toISOString()
   };
   
@@ -1338,7 +1625,23 @@ function renderBookmarks() {
     const marker = document.createElement('div');
     marker.className = `bookmark-marker ${EVENT_TYPES[bookmark.type].class}`;
     marker.innerHTML = EVENT_TYPES[bookmark.type].icon;
-    marker.title = `${formatTimeForPDF(bookmark.time)} - ${EVENT_TYPES[bookmark.type].name}${bookmark.note ? ': ' + bookmark.note : ''}`;
+    
+    // Add team color border if available
+    if (bookmark.teamColor) {
+      marker.style.borderColor = bookmark.teamColor;
+      marker.style.boxShadow = `0 0 12px ${bookmark.teamColor}40`;
+      marker.classList.add('team-colored');
+    }
+    
+    // Enhanced tooltip with team info
+    let tooltipText = `${formatTimeForPDF(bookmark.time)} - ${EVENT_TYPES[bookmark.type].name}`;
+    if (bookmark.teamName) {
+      tooltipText += ` (${bookmark.teamName})`;
+    }
+    if (bookmark.note) {
+      tooltipText += `: ${bookmark.note}`;
+    }
+    marker.title = tooltipText;
     
     marker.addEventListener('click', () => {
       addClickEffect(marker);
@@ -1370,21 +1673,36 @@ function renderBookmarkList() {
     return;
   }
   
-  elements.bookmarkList.innerHTML = bookmarks.map(bookmark => `
-    <div class="bookmark-item">
-      <div class="bookmark-info">
-        <span class="event-icon">${EVENT_TYPES[bookmark.type].icon}</span>
-        <div class="bookmark-details">
-          <div class="bookmark-time">${formatTimeForPDF(bookmark.time)}</div>
-          ${bookmark.note ? `<div class="bookmark-note">${bookmark.note}</div>` : ''}
+  elements.bookmarkList.innerHTML = bookmarks.map(bookmark => {
+    // Create team color indicator if available
+    let teamColorIndicator = '';
+    if (bookmark.teamColor && bookmark.teamName) {
+      teamColorIndicator = `<div class="team-color-indicator" style="background: ${bookmark.teamColor};" title="${bookmark.teamName}"></div>`;
+    }
+    
+    // Style bookmark note with team color
+    let noteStyle = '';
+    if (bookmark.teamColor) {
+      noteStyle = `style="color: ${bookmark.teamColor}; font-weight: 600;"`;
+    }
+    
+    return `
+      <div class="bookmark-item">
+        <div class="bookmark-info">
+          ${teamColorIndicator}
+          <span class="event-icon">${EVENT_TYPES[bookmark.type].icon}</span>
+          <div class="bookmark-details">
+            <div class="bookmark-time">${formatTimeForPDF(bookmark.time)}</div>
+            ${bookmark.note ? `<div class="bookmark-note" ${noteStyle}>${bookmark.note}</div>` : ''}
+          </div>
+        </div>
+        <div class="bookmark-actions">
+          <button class="bookmark-goto btn-animate" onclick="goToBookmark(${bookmark.time})">ไป</button>
+          <button class="bookmark-delete btn-animate" onclick="deleteBookmark(${bookmark.id})">ลบ</button>
         </div>
       </div>
-      <div class="bookmark-actions">
-        <button class="bookmark-goto btn-animate" onclick="goToBookmark(${bookmark.time})">ไป</button>
-        <button class="bookmark-delete btn-animate" onclick="deleteBookmark(${bookmark.id})">ลบ</button>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 window.goToBookmark = function(time) {
@@ -1474,6 +1792,9 @@ function saveTeamNames() {
     if (teamBEl) {
       localStorage.setItem(LS_KEYS.teamB, teamBEl.value.trim());
     }
+    
+    // Also save colors when saving team names
+    saveTeamColors();
   } catch (e) {
     console.warn('Could not save team names:', e);
   }
@@ -1496,6 +1817,10 @@ function loadTeamNames() {
     }
     
     const hasTeamNames = teamA && teamB;
+    
+    // Also load colors
+    const hasColors = loadTeamColors();
+    
     return hasTeamNames;
   } catch (e) {
     console.warn('Could not load team names:', e);
@@ -1538,6 +1863,9 @@ function setupTeamNameListeners() {
     teamBEl.addEventListener('blur', saveTeamNames);
     teamBEl.addEventListener('change', saveTeamNames);
   }
+  
+  // Setup color listeners as well
+  setupColorListeners();
 }
 
 /* === UI Building functions === */
@@ -2118,6 +2446,15 @@ function init() {
   const hadSavedTeams = loadTeamNames();
   const hadSavedHalfEnds = loadHalfEndTimes();
   
+  // Initialize team colors
+  updateTeamColorsInCSS();
+  
+  // Update preset selections based on current colors
+  const colorAEl = document.querySelector('#colorA');
+  const colorBEl = document.querySelector('#colorB');
+  if (colorAEl) updatePresetSelection(colorAEl);
+  if (colorBEl) updatePresetSelection(colorBEl);
+  
   if (!hadSavedTimes) {
     const now = new Date();
     elements.t1h.value = now.getHours();
@@ -2147,12 +2484,15 @@ function init() {
   
   updateAutoStatus();
   
-  if (hadSavedTimes || hadSavedPosition || bookmarks.length > 0 || hadSavedTeams || hadSavedHalfEnds) {
+  const hadSavedColors = loadTeamColors();
+  
+  if (hadSavedTimes || hadSavedPosition || bookmarks.length > 0 || hadSavedTeams || hadSavedHalfEnds || hadSavedColors) {
     const restoredItems = [];
     if (hadSavedTimes) restoredItems.push('เวลาเริ่มแมตช์');
     if (hadSavedPosition) restoredItems.push('ตำแหน่งเวลา');
     if (bookmarks.length > 0) restoredItems.push(`เหตุการณ์ ${bookmarks.length} รายการ`);
     if (hadSavedTeams) restoredItems.push('ชื่อทีม');
+    if (hadSavedColors) restoredItems.push('สีทีม');
     if (hadSavedHalfEnds) restoredItems.push('เวลาจบครึ่ง');
     
     const restoredFeedback = document.createElement('div');
