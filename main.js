@@ -2141,36 +2141,48 @@ elements.wrap.addEventListener('wheel', e => {
 }, { passive: false });
 
 window.addEventListener('keydown', e => {
-  if (e.key === 'ArrowLeft') {
-    if (isAutoPlaying) {
-      stopAutoPlay();
+  // Check if user is typing in an input field - if so, don't trigger shortcuts
+  const activeElement = document.activeElement;
+  const isTyping = activeElement && (
+    activeElement.tagName === 'INPUT' || 
+    activeElement.tagName === 'TEXTAREA' || 
+    activeElement.tagName === 'SELECT' ||
+    activeElement.contentEditable === 'true'
+  );
+  
+  // Only trigger keyboard shortcuts if user is not typing
+  if (!isTyping) {
+    if (e.key === 'ArrowLeft') {
+      if (isAutoPlaying) {
+        stopAutoPlay();
+      }
+      seekSecVal = clamp(seekSecVal - (e.shiftKey ? 30 : 5), 0, MAX_SEC);
+      render();
     }
-    seekSecVal = clamp(seekSecVal - (e.shiftKey ? 30 : 5), 0, MAX_SEC);
-    render();
-  }
-  if (e.key === 'ArrowRight') {
-    if (isAutoPlaying) {
-      stopAutoPlay();
+    if (e.key === 'ArrowRight') {
+      if (isAutoPlaying) {
+        stopAutoPlay();
+      }
+      seekSecVal = clamp(seekSecVal + (e.shiftKey ? 30 : 5), 0, MAX_SEC);
+      render();
     }
-    seekSecVal = clamp(seekSecVal + (e.shiftKey ? 30 : 5), 0, MAX_SEC);
-    render();
-  }
-  if (e.key === ' ') {
-    e.preventDefault();
-    if (isAutoPlaying) {
-      stopAutoPlay();
-    } else {
-      startAutoPlay();
+    if (e.key === ' ') {
+      e.preventDefault();
+      if (isAutoPlaying) {
+        stopAutoPlay();
+      } else {
+        startAutoPlay();
+      }
     }
-  }
-  // Zoom keyboard shortcuts
-  if (e.key === '+' || e.key === '=') {
-    e.preventDefault();
-    zoomIn();
-  }
-  if (e.key === '-' || e.key === '_') {
-    e.preventDefault();
-    zoomOut();
+    // Zoom keyboard shortcuts
+    if (e.key === '+' || e.key === '=') {
+      e.preventDefault();
+      zoomIn();
+    }
+    if (e.key === '-' || e.key === '_') {
+      e.preventDefault();
+      zoomOut();
+    }
   }
 });
 
