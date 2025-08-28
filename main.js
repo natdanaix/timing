@@ -1370,13 +1370,27 @@ function setupEventListeners() {
   }, { passive: false });
 
   // Keyboard controls
+// Keyboard controls - only work when not typing in input fields
   window.addEventListener('keydown', e => {
+    // Check if user is typing in an input field
+    const activeElement = document.activeElement;
+    const isTyping = activeElement && (
+      activeElement.tagName === 'INPUT' || 
+      activeElement.tagName === 'TEXTAREA' ||
+      activeElement.contentEditable === 'true'
+    );
+    
+    // Don't handle keyboard shortcuts when typing
+    if (isTyping) return;
+    
     if (e.key === 'ArrowLeft') {
+      e.preventDefault();
       if (isAutoPlaying) stopAutoPlay();
       seekSecVal = clamp(seekSecVal - (e.shiftKey ? 30 : 5), 0, MAX_SEC);
       render();
     }
     if (e.key === 'ArrowRight') {
+      e.preventDefault();
       if (isAutoPlaying) stopAutoPlay();
       seekSecVal = clamp(seekSecVal + (e.shiftKey ? 30 : 5), 0, MAX_SEC);
       render();
