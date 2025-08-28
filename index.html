@@ -3,269 +3,273 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>Football Time Tuner — Auto Play</title>
+  <title>Football Time Tuner – Auto Play</title>
   <link rel="icon" type="image/png" href="https://thaileague.co.th/assets/img/thaileague_meta_logo.jpeg">
   <link rel="stylesheet" href="main.css">
 </head>
 <body>
   <div class="field-background"></div>
   
-  <h1>⚽ Football Timing</h1>
+  <!-- Header Section -->
+  <header class="app-header">
+    <h1>⚽ Football Timing</h1>
+  </header>
 
-  <!-- ชื่อทีม -->
-  <div class="card card-teams">
-    <div class="team-inputs">
-      <div class="team-input-group">
-        <label for="teamA">🏠 ทีมเจ้าบ้าน:</label>
-        <input type="text" id="teamA" placeholder="ชื่อทีม A" maxlength="30">
-        <div class="color-selector">
-          <label for="colorA" class="color-label">สีทีม:</label>
-          <input type="color" id="colorA" value="#4caf50" class="color-input">
-          <div class="color-presets">
-            <button class="color-preset" data-color="#4caf50" style="background: #4caf50" title="เขียว"></button>
-            <button class="color-preset" data-color="#2196f3" style="background: #2196f3" title="น้ำเงิน"></button>
-            <button class="color-preset" data-color="#f44336" style="background: #f44336" title="แดง"></button>
-            <button class="color-preset" data-color="#ff9800" style="background: #ff9800" title="ส้ม"></button>
-            <button class="color-preset" data-color="#9c27b0" style="background: #9c27b0" title="ม่วง"></button>
-          </div>
+  <!-- Main Container -->
+<!-- Main Container - จัดเรียงลำดับใหม่ -->
+<main class="app-main">
+    
+  <!-- 1. Team Configuration Panel -->
+  <section class="panel panel-teams">
+    <h2 class="panel-title">👥 ข้อมูลทีม</h2>
+    <div class="teams-grid">
+      <!-- Team A -->
+      <div class="team-config">
+        <div class="team-header">
+          <label for="teamA" class="team-label">🏠 ทีมเจ้าบ้าน</label>
+          <input type="color" id="colorA" value="#4caf50" class="color-input-inline" title="เลือกสีทีม A">
         </div>
+        <input type="text" id="teamA" class="team-input" placeholder="ชื่อทีม A" maxlength="30">
       </div>
+
+      <!-- VS Divider -->
       <div class="vs-divider">
         <span>VS</span>
       </div>
-      <div class="team-input-group">
-        <label for="teamB">🚌 ทีมเยือน:</label>
-        <input type="text" id="teamB" placeholder="ชื่อทีม B" maxlength="30">
-        <div class="color-selector">
-          <label for="colorB" class="color-label">สีทีม:</label>
-          <input type="color" id="colorB" value="#8bc34a" class="color-input">
-          <div class="color-presets">
-            <button class="color-preset" data-color="#8bc34a" style="background: #8bc34a" title="เขียวอ่อน"></button>
-            <button class="color-preset" data-color="#03a9f4" style="background: #03a9f4" title="ฟ้า"></button>
-            <button class="color-preset" data-color="#e91e63" style="background: #e91e63" title="ชมพู"></button>
-            <button class="color-preset" data-color="#ffc107" style="background: #ffc107" title="เหลือง"></button>
-            <button class="color-preset" data-color="#607d8b" style="background: #607d8b" title="เทา"></button>
+
+      <!-- Team B -->
+      <div class="team-config">
+        <div class="team-header">
+          <label for="teamB" class="team-label">🚌 ทีมเยือน</label>
+          <input type="color" id="colorB" value="#8bc34a" class="color-input-inline" title="เลือกสีทีม B">
+        </div>
+        <input type="text" id="teamB" class="team-input" placeholder="ชื่อทีม B" maxlength="30">
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Main Timeline Tuner - ย้ายมาเป็นอันดับ 2 -->
+  <section class="panel panel-tuner">
+    <!-- Control Bar -->
+    <div class="tuner-controls">
+      <div class="control-group playback">
+        <button id="playBtn" class="btn btn-play">▶️ Play</button>
+        <button id="liveBtn" class="btn btn-live">🔴 LIVE</button>
+        <span id="autoStatus" class="status-text">Paused</span>
+      </div>
+      
+      <div class="control-group zoom">
+        <button id="zoomOut" class="btn btn-zoom" title="ซูมออก">🔍➖</button>
+        <span id="zoomLevel" class="zoom-display">1min</span>
+        <button id="zoomIn" class="btn btn-zoom" title="ซูมเข้า">🔍➕</button>
+      </div>
+      
+      <div class="control-group actions">
+        <button id="addBookmarkBtn" class="btn btn-bookmark">📌 เพิ่มเหตุการณ์</button>
+        <button id="exportBtn" class="btn btn-export">📄 Export PDF</button>
+      </div>
+    </div>
+
+    <!-- Timeline Container -->
+    <div class="timeline-wrapper">
+      <h3 class="timeline-title">⚽ หน้าปัดเวลาสนาม</h3>
+      <div class="tuner-wrap" id="wrap" aria-label="time tuner">
+        <!-- Timeline containers -->
+        <div class="timeline-container timeline-first-half">
+          <div class="scale" id="scaleFirstHalf">
+            <div class="baseline"></div>
+            <div class="ticks" id="ticksFirstHalf"></div>
+            <div class="bookmarks" id="bookmarksFirstHalf"></div>
+          </div>
+        </div>
+        
+        <div class="timeline-container timeline-second-half">
+          <div class="scale" id="scaleSecondHalf">
+            <div class="baseline"></div>
+            <div class="ticks" id="ticksSecondHalf"></div>
+            <div class="bookmarks" id="bookmarksSecondHalf"></div>
+          </div>
+        </div>
+        
+        <!-- Dual needles -->
+        <div class="needle-container">
+          <div class="needle first-half" id="needleFirstHalf">
+            <div class="needle-ball">⚽</div>
+          </div>
+          <div class="needle second-half" id="needleSecondHalf">
+            <div class="needle-ball">⚽</div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- เริ่มครึ่งแรก / ครึ่งหลัง -->
-  <div class="card card-halftime">
-    <div class="row">
-      <div class="group g1">
-        <div class="label"><span class="dot g"></span>เริ่มครึ่งแรก</div>
-        <div class="row" style="gap:8px">
-          <select id="t1h"></select><select id="t1m"></select>
-          <button id="t1now" class="btn-animate">ตอนนี้</button>
+      <!-- Time Display -->
+      <div class="time-display">
+        <div class="time-card real-time">
+          <div class="time-label">🕘 เวลาจริง</div>
+          <div class="time-value" id="barReal">--:--</div>
         </div>
-      </div>
-      <div class="group g2">
-        <div class="label"><span class="dot p"></span>เริ่มครึ่งหลัง</div>
-        <div class="row" style="gap:8px">
-          <select id="t2h"></select><select id="t2m"></select>
-          <button id="t2now" class="btn-animate">ตอนนี้</button>
+        <div class="time-card field-time" id="barFieldPill" role="button" aria-haspopup="dialog">
+          <div class="time-info">
+            <div class="time-label">⚽ เวลาสนาม</div>
+            <div class="time-hint">คลิกเพื่อเปลี่ยนเวลา</div>
+          </div>
+          <div class="time-value" id="barField">00:00</div>
         </div>
       </div>
     </div>
-    
-    <!-- Half End Controls -->
-    <div class="half-end-controls">
-      <div class="control-group">
-        <div class="control-buttons">
-          <button id="endFirstHalf" class="btn-animate end-half-btn">⏹️ จบครึ่งแรก</button>
-          <button id="resetFirstHalf" class="btn-animate reset-btn" title="รีเซ็ตเวลาจบครึ่งแรก">🔄</button>
-        </div>
-        <span id="firstHalfEndTime" class="end-time-display">--:--</span>
-      </div>
-      <div class="control-group">
-        <div class="control-buttons">
-          <button id="endSecondHalf" class="btn-animate end-half-btn">🏆 จบเกม</button>
-          <button id="resetSecondHalf" class="btn-animate reset-btn" title="รีเซ็ตเวลาจบเกม">🔄</button>
-        </div>
-        <span id="secondHalfEndTime" class="end-time-display">--:--</span>
-      </div>
-    </div>
-  </div>
+  </section>
 
-  <!-- Tuner -->
-  <div class="card card-tuner">
-   <!-- Auto-play controls -->
-    <div class="auto-controls">
-      <div class="play-controls">
-        <button id="playBtn" class="play-btn btn-animate">▶️ Play</button>
-        <button id="liveBtn" class="live-btn btn-animate">🔴 LIVE</button>
-        <button id="exportBtn" class="export-btn btn-animate">📄 Export PDF</button>
-      </div>
-      <div class="zoom-controls">
-        <button id="zoomOut" class="zoom-btn btn-animate" title="ซูมออก">🔍➖</button>
-        <span id="zoomLevel" class="zoom-level">1min</span>
-        <button id="zoomIn" class="zoom-btn btn-animate" title="ซูมเข้า">🔍➕</button>
-      </div>
-      <div class="auto-status" id="autoStatus">Paused</div>
-    </div>
-    
-    <div class="tuner-header">
-      <h3>⚽ หน้าปัดเวลาสนาม</h3>
-      <button id="addBookmarkBtn" class="btn-animate bookmark-add-btn" title="เพิ่มเหตุการณ์">
-        📌 เพิ่มเหตุการณ์
-      </button>
-    </div>
-    
-    <div class="tuner-wrap" id="wrap" aria-label="time tuner">
-      <!-- Timeline labels -->
-      <div class="timeline-label first-half">ครึ่งแรก</div>
-      <div class="timeline-label second-half">ครึ่งหลัง</div>
-      
-      <!-- Timeline containers -->
-      <div class="timeline-container timeline-first-half">
-        <div class="scale" id="scaleFirstHalf">
-          <div class="baseline"></div>
-          <div class="ticks" id="ticksFirstHalf"></div>
-          <div class="bookmarks" id="bookmarksFirstHalf"></div>
-        </div>
-      </div>
-      
-      <div class="timeline-container timeline-second-half">
-        <div class="scale" id="scaleSecondHalf">
-          <div class="baseline"></div>
-          <div class="ticks" id="ticksSecondHalf"></div>
-          <div class="bookmarks" id="bookmarksSecondHalf"></div>
-        </div>
-      </div>
-      
-      <!-- Dual needles -->
-      <div class="needle-container">
-        <div class="needle first-half" id="needleFirstHalf">
-          <div class="needle-ball">⚽</div>
-        </div>
-        <div class="needle second-half" id="needleSecondHalf">
-          <div class="needle-ball">⚽</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Readout below dial -->
-    <div class="readout-bar">
-      <div class="bar-pill bar-real">
-        <div class="bar-label">🕘 เวลาจริง</div>
-        <div class="bar-value mono" id="barReal">--:--</div>
-      </div>
-      <!-- แตะเพื่อเปิดเลือกเวลา (seek) -->
-      <div class="bar-pill bar-field h1 btn-animate" id="barFieldPill" role="button" aria-haspopup="dialog" aria-controls="seekSheet">
-        <div>
-          <div class="bar-label">⚽ เวลาสนาม</div>
-          <div class="bar-hint">คลิกเพื่อเปลี่ยนเวลา</div>
-        </div>
-        <div class="bar-value mono" id="barField">00:00</div>
-      </div>
-    </div>
-    
-    <!-- Bookmark controls -->
-    <div class="bookmark-controls">
-      <button id="viewBookmarksBtn" class="btn-animate bookmark-list-btn">
+  <!-- 3. Bookmark Management -->
+  <section class="panel panel-bookmarks">
+    <h2 class="panel-title">📋 จัดการเหตุการณ์</h2>
+    <div class="bookmark-summary">
+      <button id="viewBookmarksBtn" class="btn btn-bookmark-list">
         📋 ดูเหตุการณ์ทั้งหมด (<span id="bookmarkCount">0</span>)
       </button>
     </div>
-  </div>
+  </section>
 
-  <!-- Bottom sheet: Seek picker -->
-  <div class="sheet-backdrop" id="sheetBackdrop"></div>
-  <div class="sheet" id="seekSheet" aria-modal="true">
-    <div class="panel">
-      <div class="row">
-        <div class="label" style="gap:10px">🎯 ไปที่เวลา:</div>
-        <div class="row" style="gap:8px">
-          <select id="sheetMin" aria-label="นาที"></select> :
-          <select id="sheetSec" aria-label="วินาที"></select>
+  <!-- 4. Time Control Panel - ย้ายมาไว้ล่างสุด -->
+  <section class="panel panel-time-control">
+    <h2 class="panel-title">⏰ ควบคุมเวลา</h2>
+    <div class="time-grid">
+      <!-- First Half -->
+      <div class="half-control first-half">
+        <div class="half-header">
+          <span class="half-indicator first"></span>
+          <h3>เริ่มครึ่งแรก</h3>
+        </div>
+        <div class="time-inputs">
+          <select id="t1h" class="time-select"></select>
+          <span class="time-separator">:</span>
+          <select id="t1m" class="time-select"></select>
+          <button id="t1now" class="btn btn-now">ตอนนี้</button>
+        </div>
+        <div class="half-actions">
+          <button id="endFirstHalf" class="btn btn-end-half">⏸️ จบครึ่งแรก</button>
+          <button id="resetFirstHalf" class="btn btn-reset" title="รีเซ็ตเวลาจบครึ่งแรก">🔄</button>
+          <span id="firstHalfEndTime" class="end-time">--:--</span>
         </div>
       </div>
-      <div class="row" style="margin-top:10px;gap:8px">
-        <div class="chips" style="display:flex;gap:8px;flex-wrap:wrap">
-          <button id="quick0" class="btn-animate">00:00</button>
-          <button id="quick45" class="btn-animate">45:00</button>
-          <button id="quick45plus5" class="btn-animate">45+5:00</button>
-          <button id="quick90" class="btn-animate">90:00</button>
-          <button id="quick90plus5" class="btn-animate">90+5:00</button>
-          <button id="quick90plus10" class="btn-animate">90+10:00</button>
+
+      <!-- Second Half -->
+      <div class="half-control second-half">
+        <div class="half-header">
+          <span class="half-indicator second"></span>
+          <h3>เริ่มครึ่งหลัง</h3>
         </div>
-        <div style="margin-left:auto;display:flex;gap:8px">
-          <button id="sheetCancel" class="btn-animate">ยกเลิก</button>
-          <button class="btn-main btn-animate" id="sheetGo">⚽ ไป</button>
+        <div class="time-inputs">
+          <select id="t2h" class="time-select"></select>
+          <span class="time-separator">:</span>
+          <select id="t2m" class="time-select"></select>
+          <button id="t2now" class="btn btn-now">ตอนนี้</button>
         </div>
+        <div class="half-actions">
+          <button id="endSecondHalf" class="btn btn-end-half">🏆 จบเกม</button>
+          <button id="resetSecondHalf" class="btn btn-reset" title="รีเซ็ตเวลาจบเกม">🔄</button>
+          <span id="secondHalfEndTime" class="end-time">--:--</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+  <!-- Modal Sheets -->
+  
+  <!-- Seek Time Sheet -->
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+  <div class="sheet" id="seekSheet" aria-modal="true">
+    <div class="sheet-panel">
+      <div class="sheet-header">
+        <h3>🎯 ไปที่เวลา</h3>
+      </div>
+      <div class="sheet-content">
+        <div class="time-picker">
+          <select id="sheetMin" aria-label="นาที"></select>
+          <span class="time-separator">:</span>
+          <select id="sheetSec" aria-label="วินาที"></select>
+        </div>
+        <div class="quick-times">
+          <button id="quick0" class="btn btn-quick">00:00</button>
+          <button id="quick45" class="btn btn-quick">45:00</button>
+          <button id="quick45plus5" class="btn btn-quick">45+5:00</button>
+          <button id="quick90" class="btn btn-quick">90:00</button>
+          <button id="quick90plus5" class="btn btn-quick">90+5:00</button>
+          <button id="quick90plus10" class="btn btn-quick">90+10:00</button>
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button id="sheetCancel" class="btn btn-secondary">ยกเลิก</button>
+        <button id="sheetGo" class="btn btn-primary">⚽ ไป</button>
       </div>
     </div>
   </div>
 
-  <!-- Bottom sheet: Bookmark Manager -->
+  <!-- Bookmark Add Sheet -->
   <div class="sheet-backdrop" id="bookmarkBackdrop"></div>
   <div class="sheet" id="bookmarkSheet" aria-modal="true">
-    <div class="panel">
-      <div class="row">
-        <div class="label">📌 เพิ่มเหตุการณ์ที่เวลา: <span id="bookmarkTime">00:00</span></div>
+    <div class="sheet-panel">
+      <div class="sheet-header">
+        <h3>📌 เพิ่มเหตุการณ์ที่เวลา: <span id="bookmarkTime">00:00</span></h3>
       </div>
-      
-      <div class="bookmark-form">
-        <div class="row" style="margin-top:12px">
-          <div class="label">ประเภทเหตุการณ์:</div>
-        </div>
-      <div class="event-types">
-          <label class="event-type">
-            <input type="radio" name="eventType" value="yellow" checked>
-            <span class="event-icon">🟨</span>
-            <span>ใบเหลือง</span>
-          </label>
-          
-          <label class="event-type">
-            <input type="radio" name="eventType" value="secondYellow">
-            <span class="event-icon">🟨²🟥</span>
-            <span>ใบเหลืองที่2</span>
-          </label>
-          
-          <label class="event-type">
-            <input type="radio" name="eventType" value="red">
-            <span class="event-icon">🟥</span>
-            <span>ใบแดง</span>
-          </label>
-          <label class="event-type">
-            <input type="radio" name="eventType" value="penalty">
-            <span class="event-icon">🔴</span>
-            <span>จุดโทษ</span>
-          </label>
-          <label class="event-type">
-            <input type="radio" name="eventType" value="goal">
-            <span class="event-icon">⚽</span>
-            <span>ประตู</span>
-          </label>
-          <label class="event-type">
-            <input type="radio" name="eventType" value="substitution">
-            <span class="event-icon">🔄</span>
-            <span>เปลี่ยนตัว</span>
-          </label>
-          <label class="event-type">
-            <input type="radio" name="eventType" value="important">
-            <span class="event-icon">⭐</span>
-            <span>เหตุการณ์สำคัญ</span>
-          </label>
-          <label class="event-type">
-            <input type="radio" name="eventType" value="custom">
-            <span class="event-icon">📝</span>
-            <span>กำหนดเอง</span>
-          </label>
+      <div class="sheet-content">
+        <div class="form-section">
+          <label class="form-label">ประเภทเหตุการณ์:</label>
+          <div class="event-types">
+            <label class="event-type">
+              <input type="radio" name="eventType" value="yellow" checked>
+              <span class="event-icon">🟨</span>
+              <span class="event-name">ใบเหลือง</span>
+            </label>
+            <label class="event-type">
+              <input type="radio" name="eventType" value="secondYellow">
+              <span class="event-icon">🟨²🟥</span>
+              <span class="event-name">ใบเหลืองที่2</span>
+            </label>
+            <label class="event-type">
+              <input type="radio" name="eventType" value="red">
+              <span class="event-icon">🟥</span>
+              <span class="event-name">ใบแดง</span>
+            </label>
+            <label class="event-type">
+              <input type="radio" name="eventType" value="penalty">
+              <span class="event-icon">🔴</span>
+              <span class="event-name">จุดโทษ</span>
+            </label>
+            <label class="event-type">
+              <input type="radio" name="eventType" value="goal">
+              <span class="event-icon">⚽</span>
+              <span class="event-name">ประตู</span>
+            </label>
+            <label class="event-type">
+              <input type="radio" name="eventType" value="substitution">
+              <span class="event-icon">🔄</span>
+              <span class="event-name">เปลี่ยนตัว</span>
+            </label>
+            <label class="event-type">
+              <input type="radio" name="eventType" value="important">
+              <span class="event-icon">⭐</span>
+              <span class="event-name">เหตุการณ์สำคัญ</span>
+            </label>
+            <label class="event-type">
+              <input type="radio" name="eventType" value="custom">
+              <span class="event-icon">📝</span>
+              <span class="event-name">กำหนดเอง</span>
+            </label>
+          </div>
         </div>
         
-        <div class="row" style="margin-top:12px">
-          <select id="bookmarkDropdown" style="display: none; width: 100%; margin-bottom: 8px; font-size: 14px;">
+        <div class="form-section">
+          <select id="bookmarkDropdown" class="form-select" style="display: none;">
             <option value="">เลือก</option>
           </select>
-          <input type="text" id="bookmarkNote" placeholder="หมายเหตุ (ไม่บังคับ)" maxlength="50">
+          <input type="text" id="bookmarkNote" class="form-input" placeholder="หมายเหตุ (ไม่บังคับ)" maxlength="50">
         </div>
-        
-        <div class="row" style="margin-top:12px; gap:8px">
-          <button id="bookmarkCancel" class="btn-animate">ยกเลิก</button>
-          <button id="bookmarkSave" class="btn-main btn-animate">💾 บันทึก</button>
-        </div>
+      </div>
+      <div class="sheet-actions">
+        <button id="bookmarkCancel" class="btn btn-secondary">ยกเลิก</button>
+        <button id="bookmarkSave" class="btn btn-primary">💾 บันทึก</button>
       </div>
     </div>
   </div>
@@ -273,16 +277,18 @@
   <!-- Bookmark List Sheet -->
   <div class="sheet-backdrop" id="bookmarkListBackdrop"></div>
   <div class="sheet" id="bookmarkListSheet" aria-modal="true">
-    <div class="panel">
-      <div class="row">
-        <div class="label">📋 รายการเหตุการณ์</div>
-        <div style="display: flex; gap: 8px;">
-          <button id="clearAllBookmarks" class="btn-animate clear-all-btn">🗑️ ลบทั้งหมด</button>
-          <button id="bookmarkListClose" class="btn-animate">ปิด</button>
+    <div class="sheet-panel">
+      <div class="sheet-header">
+        <h3>📋 รายการเหตุการณ์</h3>
+        <div class="header-actions">
+          <button id="clearAllBookmarks" class="btn btn-danger">🗑️ ลบทั้งหมด</button>
+          <button id="bookmarkListClose" class="btn btn-secondary">ปิด</button>
         </div>
       </div>
-      <div class="bookmark-list" id="bookmarkList">
-        <!-- จะถูกเติมด้วย JavaScript -->
+      <div class="sheet-content">
+        <div class="bookmark-list" id="bookmarkList">
+          <!-- Populated by JavaScript -->
+        </div>
       </div>
     </div>
   </div>
